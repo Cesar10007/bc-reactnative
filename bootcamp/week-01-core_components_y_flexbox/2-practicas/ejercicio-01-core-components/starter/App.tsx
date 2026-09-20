@@ -18,41 +18,12 @@ import {
 
 export default function App(): React.JSX.Element {
   return (
-    // ScrollView allows the content to scroll if it overflows the screen
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.contentContainer}
     >
       <StatusBar barStyle="light-content" backgroundColor="#0d1117" />
-
-      {/* ============================================
-          PASO 1: Estructura base con View y Text
-          ============================================ */}
-      {/* Descomenta las siguientes líneas: */}
-      {/* <View style={styles.card}>
-        <Text style={styles.title}>Mi Perfil</Text>
-      </View> */}
-
-      {/* ============================================
-          PASO 2: Imagen de perfil circular
-          ============================================
-          Reemplaza el bloque del Paso 1 por este:
-      */}
-      {/* <View style={styles.card}>
-        <Image
-          source={{ uri: 'https://i.pravatar.cc/120' }}
-          style={styles.avatar}
-          resizeMode="cover"
-        />
-        <Text style={styles.title}>Mi Perfil</Text>
-      </View> */}
-
-      {/* ============================================
-          PASO 3: Información del perfil
-          ============================================
-          Reemplaza el bloque anterior por este:
-      */}
-      {/* <View style={styles.card}>
+      {<View style={styles.card}>
         <Image
           source={{ uri: 'https://i.pravatar.cc/120' }}
           style={styles.avatar}
@@ -64,42 +35,30 @@ export default function App(): React.JSX.Element {
           Primera programadora de la historia. Escribió el primer algoritmo
           diseñado para ser procesado por una máquina.
         </Text>
-      </View> */}
-
-      {/* ============================================
-          PASO 4: Fila de estadísticas
-          ============================================
-          Agrega este bloque DENTRO del card, después del bio:
-      */}
-      {/* <View style={styles.statsRow}>
-        <View style={styles.stat}>
-          <Text style={styles.statNumber}>42</Text>
-          <Text style={styles.statLabel}>Posts</Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.btnFollow,
+            pressed && styles.btnFollowPressed,
+          ]}
+          onPress={() => console.log('¡Siguiendo!')}
+        >
+          <Text style={styles.btnText}>Seguir</Text>
+        </Pressable>
+        <View style={styles.statsRow}>
+          <View style={styles.stat}>
+            <Text style={styles.statNumber}>42</Text>
+            <Text style={styles.statLabel}>Posts</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statNumber}>1.2k</Text>
+            <Text style={styles.statLabel}>Seguidores</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statNumber}>318</Text>
+            <Text style={styles.statLabel}>Siguiendo</Text>
+          </View>
         </View>
-        <View style={styles.stat}>
-          <Text style={styles.statNumber}>1.2k</Text>
-          <Text style={styles.statLabel}>Seguidores</Text>
-        </View>
-        <View style={styles.stat}>
-          <Text style={styles.statNumber}>318</Text>
-          <Text style={styles.statLabel}>Siguiendo</Text>
-        </View>
-      </View> */}
-
-      {/* ============================================
-          PASO 5: Botón de acción con feedback visual
-          ============================================
-          Agrega este bloque después del statsRow:
-      */}
-      {/* <Pressable
-        style={({ pressed }) => [
-          styles.btnFollow,
-          pressed && styles.btnFollowPressed,
-        ]}
-        onPress={() => console.log('¡Siguiendo!')}
-      >
-        <Text style={styles.btnText}>Seguir</Text>
-      </Pressable> */}
+      </View>}
     </ScrollView>
   );
 }
