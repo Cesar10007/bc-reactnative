@@ -1,6 +1,5 @@
 // src/stores/savedStore.ts
-// Store Zustand para gestionar los ítems guardados/favoritos.
-// TODO: implementar el store completo para tu dominio.
+// Store Zustand para gestionar las pizzas guardadas.
 
 import { create } from 'zustand';
 import type { Item } from '../types';
@@ -42,29 +41,24 @@ export const useSavedStore = create<SavedStore>((set, get) => ({
   items: [],
 
   addItem: (item) => {
-    // TODO: implementar
-    // Verificar que el ítem no esté ya en la lista antes de agregar
-    // Ejemplo:
-    // const alreadySaved = get().items.some((i) => i.id === item.id);
-    // if (alreadySaved) return;
-    // set((state) => ({ items: [...state.items, item] }));
+    const alreadySaved = get().items.some((savedItem) => savedItem.id === item.id);
+
+    if (!alreadySaved) {
+      set((state) => ({ items: [...state.items, item] }));
+    }
   },
 
   removeItem: (id) => {
-    // TODO: implementar
-    // Filtrar el ítem por id
-    // set((state) => ({ items: state.items.filter((i) => i.id !== id) }));
+    set((state) => ({
+      items: state.items.filter((item) => item.id !== id),
+    }));
   },
 
   clearAll: () => {
-    // TODO: implementar
-    // set({ items: [] });
+    set({ items: [] });
   },
 
   isItemSaved: (id) => {
-    // TODO: implementar
-    // Usar `get()` para leer el estado actual dentro de la acción
-    // return get().items.some((i) => i.id === id);
-    return false; // ← placeholder, reemplazar con la implementación
+    return get().items.some((item) => item.id === id);
   },
 }));

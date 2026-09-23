@@ -6,6 +6,7 @@
 import React from 'react';
 import {
   FlatList,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -14,10 +15,8 @@ import {
 } from 'react-native';
 
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import { useSavedStore } from '../stores/savedStore';
 import type { Item } from '../types';
-
-// TODO: importar el store
-// import { useSavedStore } from '../stores/savedStore';
 
 // ============================================================
 // SUB-COMPONENTE: SavedItem
@@ -31,17 +30,16 @@ interface SavedItemProps {
 function SavedItem({ item, onRemove }: SavedItemProps): React.JSX.Element {
   return (
     <View style={styles.card}>
-      <View style={styles.thumbnail}>
-        <Text style={styles.thumbnailText}>{item.name.charAt(0)}</Text>
-      </View>
+      <Image source={{ uri: item.image }} style={styles.image} />
 
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle} numberOfLines={1}>
           {item.name}
         </Text>
         <Text style={styles.cardDescription} numberOfLines={1}>
-          {item.description}
+          {item.flavor}
         </Text>
+        <Text style={styles.price}>${item.price.toLocaleString('es-CO')}</Text>
       </View>
 
       <Pressable
@@ -60,15 +58,9 @@ function SavedItem({ item, onRemove }: SavedItemProps): React.JSX.Element {
 // ============================================================
 
 export function SavedScreen(): React.JSX.Element {
-  // TODO: conectar con el savedStore
-  // const items     = useSavedStore((state) => state.items);
-  // const removeItem = useSavedStore((state) => state.removeItem);
-  // const clearAll  = useSavedStore((state) => state.clearAll);
-
-  // Placeholder hasta que el store esté implementado
-  const items: Item[] = [];
-  const removeItem = (_id: string): void => {};
-  const clearAll = (): void => {};
+  const items = useSavedStore((state) => state.items);
+  const removeItem = useSavedStore((state) => state.removeItem);
+  const clearAll = useSavedStore((state) => state.clearAll);
 
   const renderItem: ListRenderItem<Item> = ({ item }) => (
     <SavedItem item={item} onRemove={() => removeItem(item.id)} />
@@ -98,9 +90,9 @@ export function SavedScreen(): React.JSX.Element {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>☆</Text>
-            <Text style={styles.emptyTitle}>Sin guardados aún</Text>
+              <Text style={styles.emptyTitle}>Sin pizzas guardadas aún</Text>
             <Text style={styles.emptySubtitle}>
-              Ve a la lista principal y guarda tus ítems favoritos.
+              Ve a la lista principal y guarda tus pizzas favoritas.
             </Text>
           </View>
         }
@@ -154,17 +146,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     gap: SPACING.md,
   },
-  thumbnail: {
-    width: 44,
-    height: 44,
+  image: {
+    width: 76,
+    height: 76,
     borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  thumbnailText: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.accent,
   },
   cardContent: {
     flex: 1,
@@ -176,6 +161,12 @@ const styles = StyleSheet.create({
   },
   cardDescription: {
     ...TYPOGRAPHY.caption,
+  },
+  price: {
+    marginTop: SPACING.xs,
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    fontWeight: '600',
+    color: COLORS.accent,
   },
   removeButton: {
     width: 32,
