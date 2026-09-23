@@ -31,10 +31,9 @@ function HomeStackNavigator(): React.JSX.Element {
   return (
     <HomeStack.Navigator
       screenOptions={{
-        // TODO: personalizar el header con colores del tema
-        // headerStyle: { backgroundColor: COLORS.surface },
-        // headerTintColor: COLORS.accent,
-        // headerTitleStyle: { fontWeight: 'bold' },
+        headerStyle: { backgroundColor: COLORS.surface },
+        headerTintColor: COLORS.textPrimary,
+        headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
       {/* Pantalla inicial del Stack — lista de elementos */}
@@ -50,10 +49,7 @@ function HomeStackNavigator(): React.JSX.Element {
       <HomeStack.Screen
         name="HomeDetail"
         component={DetailScreen}
-        // El título se puede leer dinámicamente desde los params
-        // options={({ route }) => ({ title: route.params.name })}
-        // TODO: descomentar la línea de arriba y borrar la de abajo
-        options={{ title: 'Detalle' }}
+        options={({ route }) => ({ title: route.params.name })}
       />
     </HomeStack.Navigator>
   );
@@ -69,25 +65,22 @@ export function RootNavigator(): React.JSX.Element {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        // TODO: implementar la función tabBarIcon para cada pestaña
-        // Deben ser iconos de Ionicons que cambien de color según `focused`
-        // tabBarIcon: ({ focused, color, size }) => {
-        //   let iconName: keyof typeof Ionicons.glyphMap;
-        //   if (route.name === 'Home') {
-        //     iconName = focused ? 'home' : 'home-outline';
-        //   } else {
-        //     iconName = focused ? 'heart' : 'heart-outline';
-        //   }
-        //   return <Ionicons name={iconName} size={size} color={color} />;
-        // },
-        // Color del ícono/texto activo
-        // TODO: descomentar para aplicar el color del tema
-        // tabBarActiveTintColor: COLORS.accent,
-        // tabBarInactiveTintColor: COLORS.textSecondary,
-        // Ocultar el header del Tab porque cada Stack ya tiene el suyo
+        tabBarIcon: ({ focused, color, size }) => {
+          const iconName: keyof typeof Ionicons.glyphMap =
+            route.name === 'Home'
+              ? focused
+                ? 'home'
+                : 'home-outline'
+              : focused
+                ? 'heart'
+                : 'heart-outline';
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: COLORS.accent,
+        tabBarInactiveTintColor: COLORS.textSecondary,
         headerShown: false,
-        // TODO: personalizar el fondo del tab bar
-        // tabBarStyle: { backgroundColor: COLORS.surface },
+        tabBarStyle: { backgroundColor: COLORS.surface },
       })}
     >
       {/* La pestaña Home usa el Stack interno */}

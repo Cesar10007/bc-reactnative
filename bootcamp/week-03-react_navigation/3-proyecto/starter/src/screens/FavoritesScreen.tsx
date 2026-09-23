@@ -2,7 +2,7 @@
 // Segunda pestaña del Tab Navigator.
 // Muestra una lista de elementos favoritos del dominio.
 
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
 
 import { FAVORITES } from '../data/mockData';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
@@ -16,14 +16,12 @@ export function FavoritesScreen(): React.JSX.Element {
   function renderFavorite({ item }: { item: Item }): React.JSX.Element {
     return (
       <View style={styles.card}>
-        {/* Ícono de favorito */}
         <Text style={styles.heartIcon}>♥</Text>
         <View style={styles.cardContent}>
+            <Image source={{ uri: item.image }} style={styles.image} />
           <Text style={styles.itemName}>{item.name}</Text>
-          <Text style={styles.itemDescription} numberOfLines={2}>
-            {item.description}
-          </Text>
-          {/* TODO: agregar campos de tu dominio igual que en HomeScreen */}
+            <Text style={styles.itemDescription}>{item.flavor}</Text>
+            <Text style={styles.price}>${item.price.toLocaleString('es-CO')}</Text>
         </View>
       </View>
     );
@@ -31,9 +29,7 @@ export function FavoritesScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      {/* TODO: cambiar el título según tu dominio */}
-      {/* Ejemplos: "Mis Libros Favoritos", "Medicamentos Guardados", etc. */}
-      <Text style={styles.title}>Favoritos</Text>
+      <Text style={styles.title}>Mis pizzas favoritas</Text>
       <FlatList
         data={FAVORITES}
         keyExtractor={(item) => item.id}
@@ -88,6 +84,12 @@ const styles = StyleSheet.create({
   cardContent: {
     flex: 1,
   },
+  image: {
+    width: '100%',
+    height: 100,
+    borderRadius: RADIUS.sm,
+    marginBottom: SPACING.sm,
+  },
   itemName: {
     fontSize: TYPOGRAPHY.size.base,
     fontWeight: TYPOGRAPHY.weight.semibold,
@@ -98,6 +100,12 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.size.sm,
     color: COLORS.textSecondary,
     lineHeight: 18,
+  },
+  price: {
+    marginTop: SPACING.sm,
+    fontSize: TYPOGRAPHY.size.base,
+    fontWeight: TYPOGRAPHY.weight.semibold,
+    color: COLORS.accent,
   },
   separator: {
     height: SPACING.sm,

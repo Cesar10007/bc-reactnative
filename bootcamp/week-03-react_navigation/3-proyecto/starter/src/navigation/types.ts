@@ -28,5 +28,9 @@ export type HomeStackParamList = {
   HomeDetail: {
     id: string;
     name: string;
+    image: string;
+    price: number;
+    flavor: string;
+    doughType: 'delgada' | 'gruesa';
   };
 };
