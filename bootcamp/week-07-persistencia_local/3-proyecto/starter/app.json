@@ -1,10 +1,9 @@
 {
   "expo": {
-    "name": "Week 07 — Persistencia Local",
-    "slug": "week-07-persistencia-local",
-    "version": "1.0.0",
+    "name": "Pizza Ruta",
+    "slug": "pizza-ruta-w7",
+    "version": "1.7.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "resizeMode": "contain",
@@ -20,6 +19,15 @@
       },
       "package": "dev.ergrato.bootcamp.week07"
     },
-    "newArchEnabled": true
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-secure-store",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3c68a5d9-a42b-4d33-98e4-cfeaf655d91f"
+      }
+    }
   }
 }
