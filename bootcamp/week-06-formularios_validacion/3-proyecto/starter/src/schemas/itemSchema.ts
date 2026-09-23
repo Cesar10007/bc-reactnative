@@ -1,31 +1,39 @@
-// src/schemas/itemSchema.ts
-// Schema Zod para el formulario de ítem.
-// TODO: adaptar los campos a tu dominio asignado.
-
 import { z } from 'zod';
 
 export const itemSchema = z.object({
-  // TODO: renombra y ajusta los campos a tu dominio
-  // Ejemplos:
-  // Biblioteca  → title (título del libro), author (autor), pages (z.coerce.number)
-  // Farmacia    → name (nombre), price (z.coerce.number), stock (z.coerce.number)
-  // Restaurante → name (platillo), description, price (z.coerce.number)
-
-  title: z
+  name: z
     .string()
-    .min(1, 'El nombre es requerido')
-    .max(80, 'Máx. 80 caracteres'),
+    .trim()
+    .min(3, 'El nombre debe tener al menos 3 caracteres')
+    .max(80, 'El nombre no puede superar 80 caracteres'),
 
-  body: z
+  description: z
     .string()
-    .max(500, 'Máx. 500 caracteres')
+    .trim()
+    .max(500, 'La descripción no puede superar 500 caracteres')
     .optional()
     .or(z.literal('')),
 
-  // TODO: agrega campos numéricos con z.coerce.number()
-  // Ejemplo:
-  // price: z.coerce.number().positive('El precio debe ser mayor que 0'),
+  price: z
+    .string()
+    .trim()
+    .min(1, 'El precio es requerido')
+    .refine((value) => !Number.isNaN(Number(value)), 'El precio debe ser un número válido')
+    .refine((value) => Number(value) > 0, 'El precio debe ser mayor que 0')
+    .refine(
+      (value) => Number(value) <= 200000,
+      'El precio no puede superar $200.000',
+    ),
+
+  flavor: z
+    .string()
+    .trim()
+    .min(3, 'El sabor debe tener al menos 3 caracteres')
+    .max(60, 'El sabor no puede superar 60 caracteres'),
+
+  doughType: z.enum(['delgada', 'gruesa'], {
+    error: 'Selecciona masa delgada o gruesa',
+  }),
 });
 
-// El tipo TypeScript se infiere automáticamente — sin interfaz duplicada
 export type ItemFormData = z.infer<typeof itemSchema>;

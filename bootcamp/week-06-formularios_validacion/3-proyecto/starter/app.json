@@ -1,11 +1,18 @@
 {
   "expo": {
-    "name": "week-06-formularios",
-    "slug": "week-06-formularios",
-    "version": "1.0.0",
+    "name": "Pizza Ruta",
+    "slug": "pizza-ruta-w6",
+    "version": "1.6.0",
     "orientation": "portrait",
     "newArchEnabled": true,
-    "ios": { "supportsTablet": true },
-    "android": { "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#111827" } }
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.cesar.pizzarutaweek06"
+    },
+    "plugins": [
+      "expo-status-bar"
+    ]
   }
 }

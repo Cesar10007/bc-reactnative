@@ -16,8 +16,10 @@ import type { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const headerStyle = { backgroundColor: COLORS.background };
-const headerTitleStyle = { color: COLORS.text, fontWeight: '700' as const };
-
+const headerTitleStyle = {
+  color: COLORS.textPrimary,
+  fontWeight: '700' as const,
+};
 export function RootNavigator(): React.JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerStyle, headerTitleStyle }}>

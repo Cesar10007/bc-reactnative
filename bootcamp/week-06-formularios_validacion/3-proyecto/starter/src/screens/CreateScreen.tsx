@@ -1,7 +1,3 @@
-// src/screens/CreateScreen.tsx
-// Formulario para crear un nuevo ítem.
-// TODO: conectar useForm + zodResolver + useCreateItem mutation.
-
 import React from 'react';
 import {
   ActivityIndicator,
@@ -13,63 +9,56 @@ import {
   Text,
   View,
 } from 'react-native';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
-import type { RootStackParamList } from '../navigation/types';
 import { FormField } from '../components/FormField';
-
-// TODO: importar useForm y zodResolver
-// import { useForm } from 'react-hook-form';
-// import { zodResolver } from '@hookform/resolvers/zod';
-// import { itemSchema, type ItemFormData } from '../schemas/itemSchema';
-
-// TODO: importar el hook de mutación
-// import { useCreateItem } from '../hooks/useItems';
+import { useCreateItem } from '../hooks/useItems';
+import type { RootStackParamList } from '../navigation/types';
+import { itemSchema, type ItemFormData } from '../schemas/itemSchema';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 
 type CreateNavProp = NativeStackNavigationProp<RootStackParamList, 'Create'>;
-
-// ──────────────────────────────────────────────
-// PANTALLA
-// ──────────────────────────────────────────────
 
 export function CreateScreen(): React.JSX.Element {
   const navigation = useNavigation<CreateNavProp>();
 
-  // TODO: inicializar useForm con zodResolver
-  // ─────────────────────────────────────────────
-  // const {
-  //   control,
-  //   handleSubmit,
-  //   formState: { errors, isSubmitting },
-  // } = useForm<ItemFormData>({
-  //   resolver: zodResolver(itemSchema),
-  //   defaultValues: { title: '', body: '' },
-  // });
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ItemFormData>({
+    resolver: zodResolver(itemSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      price: '',
+      flavor: '',
+      doughType: 'delgada',
+    },
+  });
 
-  // TODO: inicializar la mutation
-  // const { mutate: createItem } = useCreateItem();
+  const { mutate: createItem, isPending } = useCreateItem();
 
-  // Placeholder hasta que implementes el TODO
-  const isSubmitting = false;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const errors: any = {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const control: any = undefined;
+  const onSubmit: SubmitHandler<ItemFormData> = (data) => {
+    createItem(
+      {
+        name: data.name,
+        description: data.description ?? '',
+        price: Number(data.price),
+        flavor: data.flavor,
+        doughType: data.doughType,
+        image: 'https://picsum.photos/id/292/300/200',
+      },
+      {
+        onSuccess: () => navigation.goBack(),
+      },
+    );
+  };
 
-  // TODO: implementar la función onSubmit
-  // ─────────────────────────────────────────────
-  // function onSubmit(data: ItemFormData): void {
-  //   createItem(
-  //     { title: data.title, body: data.body ?? '', userId: 1 },
-  //     {
-  //       onSuccess: () => navigation.goBack(),
-  //     },
-  //   );
-  // }
-
-  const canSubmit = !isSubmitting;
+  const submitting = isSubmitting || isPending;
 
   return (
     <KeyboardAvoidingView
@@ -82,82 +71,127 @@ export function CreateScreen(): React.JSX.Element {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.hint}>
-          Adapta los campos de este formulario a tu dominio asignado.
+          Completa los datos de la nueva pizza. Los campos marcados con * son obligatorios.
         </Text>
 
-        {/* TODO: reemplaza los FormField con los campos de tu dominio */}
-
-        <FormField
+        <FormField<ItemFormData>
           control={control}
-          name="title"
-          label="Nombre *"
-          placeholder="Nombre del ítem…"
+          name="name"
+          label="Nombre de la pizza *"
+          placeholder="Ej. Pizza Ranchera"
           returnKeyType="next"
-          errorMessage={errors.title?.message}
+          errorMessage={errors.name?.message}
         />
 
-        <FormField
+        <FormField<ItemFormData>
           control={control}
-          name="body"
-          label="Descripción"
-          placeholder="Descripción opcional…"
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-          errorMessage={errors.body?.message}
+          name="flavor"
+          label="Sabor *"
+          placeholder="Ej. Pollo, tocineta y maíz"
+          returnKeyType="next"
+          errorMessage={errors.flavor?.message}
         />
 
-        {/* TODO: agrega campos adicionales de tu dominio aquí */}
-        {/* Ejemplo para Farmacia:
-        <FormField
+        <FormField<ItemFormData>
           control={control}
           name="price"
           label="Precio *"
-          placeholder="0.00"
+          placeholder="Ej. 32000"
           keyboardType="numeric"
+          returnKeyType="next"
           errorMessage={errors.price?.message}
-        /> */}
+        />
+
+        <FormField<ItemFormData>
+          control={control}
+          name="doughType"
+          label="Tipo de masa *"
+          placeholder="delgada o gruesa"
+          autoCapitalize="none"
+          returnKeyType="next"
+          errorMessage={errors.doughType?.message}
+        />
+
+        <FormField<ItemFormData>
+          control={control}
+          name="description"
+          label="Descripción"
+          placeholder="Describe los ingredientes de la pizza..."
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+          errorMessage={errors.description?.message}
+        />
 
         <View style={styles.actions}>
           <Pressable
-            style={[styles.button, !canSubmit && styles.buttonDisabled]}
-            // onPress={handleSubmit(onSubmit)}   ← descomentar al implementar
-            disabled={!canSubmit}
+            style={[styles.button, submitting && styles.buttonDisabled]}
+            onPress={handleSubmit(onSubmit)}
+            disabled={submitting}
+            accessibilityRole="button"
+            accessibilityLabel="Crear pizza"
           >
-            {isSubmitting
-              ? <ActivityIndicator size="small" color={COLORS.background} />
-              : <Text style={styles.buttonText}>Crear ítem</Text>
-            }
+            {submitting ? (
+              <ActivityIndicator size="small" color={COLORS.background} />
+            ) : (
+              <Text style={styles.buttonText}>Crear pizza</Text>
+            )}
           </Pressable>
 
-          <Pressable style={styles.cancel} onPress={() => navigation.goBack()}>
+          <Pressable
+            style={styles.cancel}
+            onPress={() => navigation.goBack()}
+            disabled={submitting}
+          >
             <Text style={styles.cancelText}>Cancelar</Text>
           </Pressable>
         </View>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-// ──────────────────────────────────────────────
-// ESTILOS
-// ──────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: COLORS.background },
-  container: { flex: 1 },
-  content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xxl },
-  hint: { ...TYPOGRAPHY.caption, fontStyle: 'italic' },
-  actions: { gap: SPACING.sm, marginTop: SPACING.sm },
+  flex: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: SPACING.lg,
+    gap: SPACING.md,
+    paddingBottom: SPACING.xxl,
+  },
+  hint: {
+    ...TYPOGRAPHY.caption,
+    fontStyle: 'italic',
+  },
+  actions: {
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
   button: {
     backgroundColor: COLORS.accent,
     borderRadius: RADIUS.sm,
     padding: SPACING.md,
     alignItems: 'center',
   },
-  buttonDisabled: { opacity: 0.45 },
-  buttonText: { ...TYPOGRAPHY.body, fontWeight: '700' },
-  cancel: { alignItems: 'center', padding: SPACING.sm },
-  cancelText: { ...TYPOGRAPHY.body, color: COLORS.textMuted },
+  buttonDisabled: {
+    opacity: 0.45,
+  },
+  buttonText: {
+    ...TYPOGRAPHY.body,
+    fontWeight: '700',
+    color: COLORS.background,
+  },
+  cancel: {
+    alignItems: 'center',
+    padding: SPACING.sm,
+  },
+  cancelText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.textMuted,
+  },
 });
