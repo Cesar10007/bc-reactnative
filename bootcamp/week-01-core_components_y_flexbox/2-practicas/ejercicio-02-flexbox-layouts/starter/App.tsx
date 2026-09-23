@@ -37,20 +37,20 @@ export default function App(): React.JSX.Element {
           justifyContent: 'space-between' + flexDirection: 'row'
           ============================================ */}
       {/* Descomenta las siguientes líneas: */}
-      {/* <LayoutLabel num={1} title="Header: space-between" />
+      <LayoutLabel num={1} title="Header: Con espacio" />
       <View style={styles.layout1}>
         <Text style={styles.headerTitle}>Inicio</Text>
         <Pressable style={styles.headerBtn} onPress={() => {}}>
           <Text style={styles.headerBtnText}>+ Nuevo</Text>
         </Pressable>
-      </View> */}
+      </View> 
 
       {/* ============================================
           LAYOUT 2: Tab bar — 4 ítems distribuidos
           justifyContent: 'space-evenly' + flexDirection: 'row'
           ============================================ */}
       {/* Descomenta las siguientes líneas: */}
-      {/* <LayoutLabel num={2} title="Tab Bar: space-evenly" />
+      <LayoutLabel num={2} title="Tab Bar: space-evenly" />
       <View style={styles.layout2}>
         {['Inicio', 'Buscar', 'Perfil', 'Config'].map((tab) => (
           <View key={tab} style={styles.tabItem}>
@@ -58,14 +58,14 @@ export default function App(): React.JSX.Element {
             <Text style={styles.tabLabel}>{tab}</Text>
           </View>
         ))}
-      </View> */}
+      </View>
 
       {/* ============================================
           LAYOUT 3: Tarjeta con avatar e información
           flexDirection: 'row' + alignItems: 'center' + flex: 1
           ============================================ */}
       {/* Descomenta las siguientes líneas: */}
-      {/* <LayoutLabel num={3} title="Tarjeta: row + alignItems center" />
+      <LayoutLabel num={3} title="Tarjeta: row + alignItems center" />
       <View style={styles.layout3}>
         <Image
           source={{ uri: 'https://i.pravatar.cc/56' }}
@@ -77,14 +77,14 @@ export default function App(): React.JSX.Element {
           <Text style={styles.cardSubtitle}>Padre de la computación</Text>
         </View>
         <Text style={styles.cardTimestamp}>2h</Text>
-      </View> */}
+      </View>
 
       {/* ============================================
           LAYOUT 4: Pantalla dividida en proporciones
           flex: 1 vs flex: 2 — proporción 1/3 : 2/3
           ============================================ */}
       {/* Descomenta las siguientes líneas: */}
-      {/* <LayoutLabel num={4} title="Proporciones: flex: 1 vs flex: 2" />
+      <LayoutLabel num={4} title="Proporciones: flex: 1 vs flex: 2" />
       <View style={styles.layout4}>
         <View style={styles.panel1}>
           <Text style={styles.panelTexto}>1/3</Text>
@@ -94,7 +94,7 @@ export default function App(): React.JSX.Element {
           <Text style={styles.panelTexto}>2/3</Text>
           <Text style={styles.panelHint}>flex: 2</Text>
         </View>
-      </View> */}
+      </View>
     </ScrollView>
   );
 }
