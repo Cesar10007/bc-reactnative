@@ -1,13 +1,12 @@
 // src/services/api.ts
 // Instancia Axios centralizada para el proyecto.
-// TODO: configurar la baseURL de tu API real.
+// JSONPlaceholder sirve como backend de práctica para la semana 5.
 
 import axios from 'axios';
 
 // ============================================================
 // BASE URL
 // ============================================================
-// TODO: reemplaza esta URL por la de tu API del dominio.
 // Opciones rápidas para practicar:
 //   - JSONPlaceholder: https://jsonplaceholder.typicode.com  (solo /posts, /users, etc.)
 //   - MockAPI: https://mockapi.io  (crea tu propio endpoint con los campos de tu dominio)
@@ -27,9 +26,7 @@ export const apiClient = axios.create({
   },
 });
 
-// ============================================================
-// INTERCEPTOR DE RESPUESTA — manejo global de errores
-// ============================================================
+// Manejo global de errores de red para depuración.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {

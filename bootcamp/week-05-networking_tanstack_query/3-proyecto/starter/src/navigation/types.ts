@@ -2,10 +2,17 @@
 // Tipos de los parámetros de navegación del proyecto.
 
 export type RootStackParamList = {
-  // Lista principal
   Home: undefined;
-  // Detalle — recibe el id y nombre para el header
-  Detail: { id: string | number; name: string };
-  // Formulario de creación
+
+  Detail: {
+    id: string | number;
+    name: string;
+    image: string;
+    description: string;
+    price: number;
+    flavor: string;
+    doughType: 'delgada' | 'gruesa';
+  };
+
   Create: undefined;
 };
