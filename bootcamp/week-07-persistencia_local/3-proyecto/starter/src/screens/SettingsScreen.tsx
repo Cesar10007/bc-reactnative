@@ -104,7 +104,7 @@ export function SettingsScreen(): React.JSX.Element {
       <Text style={styles.sectionTitle}>Preferencias de la app</Text>
 
       <Text style={styles.sectionHint}>
-        Estos valores se persisten con MMKV y cambian en tiempo real.
+        Estos valores se guardan localmente y cambian en tiempo real.
       </Text>
 
       <View style={styles.row}>
