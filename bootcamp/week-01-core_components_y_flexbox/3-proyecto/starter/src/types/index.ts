@@ -10,12 +10,8 @@
 export interface Item {
   id: string;
   name: string;
-  imageUri: string;
-  // TODO: Agrega las propiedades específicas de tu dominio
-  // Ejemplos:
-  //   Biblioteca → author: string; year: number;
-  //   Farmacia → activeIngredient: string; price: number;
-  //   Gimnasio → plan: string; expiresAt: string;
-  //   Restaurante → price: number; description: string;
-  subtitle: string; // campo genérico de apoyo — personaliza según tu dominio
+  image: string;
+  price: number;
+  flavor: string;
+  doughType: 'delgada' | 'gruesa';
 }
