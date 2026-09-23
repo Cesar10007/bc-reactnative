@@ -61,6 +61,10 @@ function mapRemotePost(post: RemotePost): Item {
   };
 }
 
+function createLocalId(): string {
+  return `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function useItems() {
   return useQuery<Item[]>({
     queryKey: ITEMS_QUERY_KEY,
@@ -73,9 +77,22 @@ export function useItems() {
 }
 
 export function useItemById(id: number | string) {
+  const queryClient = useQueryClient();
+
   return useQuery<Item>({
     queryKey: [...ITEMS_QUERY_KEY, id],
     queryFn: async () => {
+      const cachedItems =
+        queryClient.getQueryData<Item[]>(ITEMS_QUERY_KEY) ?? [];
+
+      const cachedItem = cachedItems.find(
+        (item) => String(item.id) === String(id),
+      );
+
+      if (cachedItem) {
+        return cachedItem;
+      }
+
       const { data } = await apiClient.get<RemotePost>(`/posts/${id}`);
 
       return mapRemotePost(data);
@@ -89,14 +106,14 @@ export function useCreateItem() {
 
   return useMutation<Item, Error, CreateItemPayload>({
     mutationFn: async (payload) => {
-      const { data } = await apiClient.post<RemotePost>('/posts', {
+      await apiClient.post<RemotePost>('/posts', {
         title: payload.name,
         body: payload.description,
       });
 
       return {
         ...payload,
-        id: String(data.id),
+        id: createLocalId(),
       };
     },
 
@@ -119,10 +136,14 @@ export function useUpdateItem() {
 
   return useMutation<Item, Error, UpdateItemPayload>({
     mutationFn: async (payload) => {
-      await apiClient.put(`/posts/${payload.id}`, {
-        title: payload.name,
-        body: payload.description,
-      });
+      const isLocalItem = String(payload.id).startsWith('local-');
+
+      if (!isLocalItem) {
+        await apiClient.put(`/posts/${payload.id}`, {
+          title: payload.name,
+          body: payload.description,
+        });
+      }
 
       return payload;
     },
@@ -132,7 +153,9 @@ export function useUpdateItem() {
         ITEMS_QUERY_KEY,
         (currentItems = []) =>
           currentItems.map((item) =>
-            String(item.id) === String(updatedItem.id) ? updatedItem : item,
+            String(item.id) === String(updatedItem.id)
+              ? updatedItem
+              : item,
           ),
       );
 
