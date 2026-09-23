@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Week 05 — TanStack Query",
-    "slug": "week05-tanstack-query",
-    "version": "1.0.0",
+    "name": "Pizza Ruta",
+    "slug": "pizza-ruta-w5",
+    "version": "1.5.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -13,6 +13,9 @@
       "adaptiveIcon": {
         "backgroundColor": "#0d1117"
       }
-    }
+    },
+    "plugins": [
+      "expo-status-bar"
+    ]
   }
 }

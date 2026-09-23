@@ -2,13 +2,19 @@
 // Pantalla principal: lista de ítems cargada desde la API.
 // TODO: conectar con useItems() y manejar todos los estados de red.
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
+  TouchableWithoutFeedback,
   View,
   type ListRenderItem,
 } from 'react-native';
@@ -16,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import { useItems } from '../hooks/useItems';
 import type { Item } from '../types';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -40,24 +47,14 @@ function ItemCard({ item, onPress }: ItemCardProps): React.JSX.Element {
       onPress={onPress}
       testID={`item-card-${item.id}`}
     >
-      <View style={styles.cardAvatar}>
-        {/* TODO: mostrar imagen del ítem si tu API la provee */}
-        <Text style={styles.cardAvatarText}>
-          {String(item.name).charAt(0).toUpperCase()}
-        </Text>
-      </View>
+      <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle} numberOfLines={1}>
-          {/* TODO: cambiar 'name' por el campo principal de tu dominio */}
-          {item.name}
-        </Text>
-        {item.description && (
-          <Text style={styles.cardSubtitle} numberOfLines={2}>
-            {item.description}
-          </Text>
-        )}
-        {/* TODO: mostrar campos adicionales de tu dominio */}
-        {/* Ejemplo: <Text style={styles.badge}>{item.price} €</Text> */}
+        <Text style={styles.cardTitle}>{item.name}</Text>
+        <Text style={styles.cardSubtitle}>{item.flavor}</Text>
+        <View style={styles.cardFooter}>
+          <Text style={styles.cardSubtitle}>{item.doughType}</Text>
+          <Text style={styles.price}>${item.price.toLocaleString('es-CO')}</Text>
+        </View>
       </View>
       <Text style={styles.chevron}>›</Text>
     </Pressable>
@@ -70,18 +67,20 @@ function ItemCard({ item, onPress }: ItemCardProps): React.JSX.Element {
 
 export function HomeScreen(): React.JSX.Element {
   const navigation = useNavigation<HomeNavProp>();
+  const [query, setQuery] = useState('');
+  const { data, isLoading, isError, isFetching, refetch, error } = useItems();
 
-  // TODO: reemplaza este bloque con el hook real
-  // ──────────────────────────────────────────
-  // const { data, isLoading, isError, isFetching, refetch, error } = useItems();
-  //
-  // Placeholders hasta que implementes el hook:
-  const isLoading = false;
-  const isError = false;
-  const isFetching = false;
-  const data: Item[] | undefined = undefined;
-  const refetch = (): void => {};
-  const error: Error | null = null;
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+
+    if (!normalizedQuery) {
+      return data ?? [];
+    }
+
+    return (data ?? []).filter((item) =>
+      item.name.toLocaleLowerCase().includes(normalizedQuery),
+    );
+  }, [data, query]);
 
   // ── Estados de carga ─────────────────────────────────────
 
@@ -101,7 +100,7 @@ export function HomeScreen(): React.JSX.Element {
       <View style={styles.centered}>
         <Text style={styles.errorText}>❌ No se pudo cargar la lista</Text>
         <Text style={styles.errorDetail}>{(error as Error)?.message}</Text>
-        <Pressable style={styles.retryButton} onPress={refetch}>
+        <Pressable style={styles.retryButton} onPress={() => void refetch()}>
           <Text style={styles.retryButtonText}>Reintentar</Text>
         </Pressable>
       </View>
@@ -114,23 +113,43 @@ export function HomeScreen(): React.JSX.Element {
       onPress={() =>
         navigation.navigate('Detail', {
           id: item.id,
-          name: String(item.name),
+          name: item.name,
+          image: item.image,
+          description: item.description,
+          price: item.price,
+          flavor: item.flavor,
+          doughType: item.doughType,
         })
       }
     />
   );
 
   return (
-    <View style={styles.container}>
-      {!data ? (
-        <View style={styles.centered}>
-          <Text style={styles.hint}>
-            Implementa useItems() en src/hooks/useItems.ts para ver los datos
-          </Text>
-        </View>
-      ) : (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.inner}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Pizza Ruta</Text>
+            <Text style={styles.headerSubtitle}>
+              Catálogo actualizado desde la API
+            </Text>
+          </View>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar pizzas..."
+              placeholderTextColor={COLORS.textMuted}
+              value={query}
+              onChangeText={setQuery}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+          </View>
         <FlatList
-          data={data}
+          data={filteredItems}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
@@ -138,19 +157,16 @@ export function HomeScreen(): React.JSX.Element {
           // TODO: pull-to-refresh con refetch
           onRefresh={refetch}
           refreshing={isFetching && !isLoading}
-          ListEmptyComponent={
-            <View style={styles.centered}>
-              <Text style={styles.emptyText}>No hay ítems disponibles.</Text>
-            </View>
-          }
+          ListEmptyComponent={<Text style={styles.emptyText}>No hay pizzas disponibles.</Text>}
           ListHeaderComponent={
             <Text style={styles.countLabel}>
-              {data.length} ítem{data.length !== 1 ? 's' : ''}
+              {filteredItems.length} pizza{filteredItems.length !== 1 ? 's' : ''}
             </Text>
           }
         />
-      )}
-    </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -160,6 +176,30 @@ export function HomeScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
+  inner: { flex: 1 },
+  header: {
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.lg,
+    paddingBottom: SPACING.md,
+  },
+  headerTitle: { ...TYPOGRAPHY.h1 },
+  headerSubtitle: { ...TYPOGRAPHY.caption, marginTop: SPACING.xs },
+  searchContainer: {
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  searchInput: {
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 10,
+    color: COLORS.textPrimary,
+    fontSize: 16,
+  },
   list: { padding: SPACING.md, paddingBottom: SPACING.xl },
   separator: { height: SPACING.sm },
   countLabel: {
@@ -169,27 +209,26 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: COLORS.card,
     borderRadius: RADIUS.md,
-    padding: SPACING.md,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: COLORS.border,
-    gap: SPACING.md,
   },
-  cardAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+  image: {
+    width: '100%',
+    height: 160,
   },
-  cardAvatarText: { ...TYPOGRAPHY.h3, color: COLORS.accent },
-  cardContent: { flex: 1, gap: SPACING.xs },
+  cardContent: { padding: SPACING.md },
   cardTitle: { ...TYPOGRAPHY.body, fontWeight: '600' },
   cardSubtitle: { ...TYPOGRAPHY.caption },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: SPACING.sm,
+  },
+  price: { ...TYPOGRAPHY.body, color: COLORS.accent, fontWeight: '600' },
   chevron: { ...TYPOGRAPHY.h2, color: COLORS.textMuted },
   centered: {
     flex: 1,

@@ -16,18 +16,12 @@
 
 export interface Item {
   id: string | number;
-  // TODO: renombra este campo según tu dominio (title, name, etc.)
   name: string;
-  // TODO: agrega campos específicos de tu dominio
-  // Ejemplo (Biblioteca):
-  //   author: string;
-  //   year: number;
-  //   isbn?: string;
-  // Ejemplo (Farmacia):
-  //   price: number;
-  //   stock: number;
-  //   prescription: boolean;
-  description?: string;
+  image: string;
+  description: string;
+  price: number;
+  flavor: string;
+  doughType: 'delgada' | 'gruesa';
 }
 
 // ============================================================

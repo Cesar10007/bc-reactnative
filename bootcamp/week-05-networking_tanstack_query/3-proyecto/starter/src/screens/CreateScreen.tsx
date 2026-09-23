@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import { useCreateItem } from '../hooks/useItems';
 import type { RootStackParamList } from '../navigation/types';
 
 // TODO: importar el hook de creación
@@ -35,27 +36,24 @@ export function CreateScreen(): React.JSX.Element {
   // Campos del formulario — adapta al dominio asignado
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [price, setPrice] = useState('');
 
-  // TODO: conectar useMutation para crear el ítem
-  // ─────────────────────────────────────────────
-  // const { mutate: createItem, isPending } = useCreateItem();
-  //
-  // Placeholder en tanto se completa el TODO:
-  const isPending = false;
+  const { mutate: createItem, isPending } = useCreateItem();
 
   function handleSubmit(): void {
     if (!title.trim()) return;
 
-    // TODO: llamar mutate con los datos del formulario
-    // ─────────────────────────────────────────────────
-    // createItem(
-    //   { title, body },
-    //   {
-    //     // onSuccess se ejecuta TRAS invalidateQueries del hook
-    //     onSuccess: () => navigation.goBack(),
-    //   },
-    // );
-    console.log('TODO: implementar createItem({ title, body })');
+    createItem(
+      {
+        name: title.trim(),
+        image: 'https://picsum.photos/id/292/300/200',
+        description: body.trim() || 'Pizza artesanal de Pizza Ruta.',
+        price: Number(price) || 30000,
+        flavor: title.trim(),
+        doughType: 'delgada',
+      },
+      { onSuccess: () => navigation.goBack() },
+    );
   }
 
   const canSubmit = title.trim().length > 0 && !isPending;
@@ -88,12 +86,17 @@ export function CreateScreen(): React.JSX.Element {
           />
         </View>
 
-        {/* TODO: agregar campos adicionales para tu dominio */}
-        {/* Por ejemplo:                                     */}
-        {/* <View style={styles.field}>                       */}
-        {/*   <Text style={styles.fieldLabel}>Precio</Text>  */}
-        {/*   <TextInput … />                                 */}
-        {/* </View>                                           */}
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>Precio</Text>
+          <TextInput
+            style={styles.input}
+            value={price}
+            onChangeText={setPrice}
+            placeholder="30000"
+            placeholderTextColor={COLORS.textMuted}
+            keyboardType="numeric"
+          />
+        </View>
 
         {/* Campo descripción / cuerpo (genérico) */}
         <View style={styles.field}>
@@ -151,7 +154,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     padding: SPACING.sm,
     ...TYPOGRAPHY.body,
-    color: COLORS.text,
+    color: COLORS.textPrimary,
   },
   multiline: { minHeight: 96, paddingTop: SPACING.sm },
   button: {

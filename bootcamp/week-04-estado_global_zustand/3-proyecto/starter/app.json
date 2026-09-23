@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "week04-zustand",
-    "slug": "week04-zustand",
-    "version": "1.0.0",
+    "name": "Pizza Ruta",
+    "slug": "pizza-ruta-w4",
+    "version": "1.4.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
