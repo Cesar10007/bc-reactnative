@@ -4,16 +4,13 @@
 // Esta pantalla demuestra cómo acceder al store desde cualquier screen.
 
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 
+import { ITEMS } from '../data/mockData';
+import { useSavedStore } from '../stores/savedStore';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 import type { HomeStackParamList } from '../navigation/types';
-
-// TODO: importar el store y el tipo Item
-// import { useSavedStore } from '../stores/savedStore';
-// import type { Item } from '../types';
-// import { ITEMS } from '../data/mockData';
 
 type DetailRouteProp = RouteProp<HomeStackParamList, 'HomeDetail'>;
 
@@ -23,56 +20,36 @@ type DetailRouteProp = RouteProp<HomeStackParamList, 'HomeDetail'>;
 
 export function DetailScreen(): React.JSX.Element {
   const route = useRoute<DetailRouteProp>();
-  const { id, name } = route.params;
+  const { id, name, image, price, flavor, doughType } = route.params;
+  const item = ITEMS.find((currentItem) => currentItem.id === id);
+  const isItemSaved = useSavedStore((state) => state.isItemSaved);
+  const addItem = useSavedStore((state) => state.addItem);
+  const removeItem = useSavedStore((state) => state.removeItem);
+  const isSaved = isItemSaved(id);
 
-  // TODO: buscar el ítem completo en ITEMS usando el id de params
-  // const item: Item | undefined = ITEMS.find((i) => i.id === id);
-
-  // ──────────────────────────────────────────────────────────
-  // TODO: obtener los selectores del savedStore
-  // ──────────────────────────────────────────────────────────
-  // Usar selectores individuales para evitar re-renders innecesarios:
-  //
-  // const isItemSaved = useSavedStore((state) => state.isItemSaved);
-  // const addItem    = useSavedStore((state) => state.addItem);
-  // const removeItem = useSavedStore((state) => state.removeItem);
-  //
-  // Luego calcular si el ítem actual está guardado:
-  // const isSaved = isItemSaved(id);
-
-  // Placeholder hasta que el store esté implementado
-  const isSaved = false;
-
-  // TODO: implementar handleToggleSave
-  // Si el ítem está guardado → removeItem(id)
-  // Si no está guardado → addItem(item)  [necesitas el objeto Item completo]
   const handleToggleSave = (): void => {
-    // TODO: implementar
-    // if (isSaved) {
-    //   removeItem(id);
-    // } else if (item) {
-    //   addItem(item);
-    // }
+    if (isSaved) {
+      removeItem(id);
+      return;
+    }
+
+    if (item) {
+      addItem(item);
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Icono / thumbnail del ítem */}
-      <View style={styles.hero}>
-        <Text style={styles.heroLetter}>{name.charAt(0)}</Text>
-      </View>
+      <Image source={{ uri: image }} style={styles.heroImage} />
 
       {/* Información principal */}
       <View style={styles.info}>
         <Text style={styles.title}>{name}</Text>
         <Text style={styles.id}>ID: {id}</Text>
-
-        {/* TODO: mostrar la descripción del ítem (item.description) */}
-        {/* TODO: mostrar campos específicos de tu dominio */}
-        <Text style={styles.description}>
-          Adapta esta pantalla a tu dominio: muestra los detalles
-          relevantes de tu ítem aquí.
-        </Text>
+        <Text style={styles.description}>{item?.description}</Text>
+        <Text style={styles.detail}>Sabor: {flavor}</Text>
+        <Text style={styles.detail}>Masa: {doughType}</Text>
+        <Text style={styles.detail}>Precio: ${price.toLocaleString('es-CO')}</Text>
       </View>
 
       {/* ──────────────────────────────────────────────────── */}
@@ -89,9 +66,18 @@ export function DetailScreen(): React.JSX.Element {
         ]}
         onPress={handleToggleSave}
         testID="save-button"
+        accessibilityRole="button"
+        accessibilityLabel={
+          isSaved ? `Quitar ${name} de guardados` : `Guardar ${name}`
+        }
       >
-        <Text style={[styles.saveButtonText, isSaved && styles.saveButtonTextActive]}>
-          {isSaved ? '★  Guardado' : '☆  Guardar'}
+        <Text
+          style={[
+            styles.saveButtonText,
+            isSaved && styles.saveButtonTextActive,
+          ]}
+        >
+          {isSaved ? '★ Guardado' : '☆ Guardar'}
         </Text>
       </Pressable>
     </View>
@@ -109,21 +95,10 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     gap: SPACING.lg,
   },
-  hero: {
-    width: 96,
-    height: 96,
+  heroImage: {
+    width: '100%',
+    height: 220,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-  },
-  heroLetter: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: COLORS.accent,
   },
   info: {
     gap: SPACING.sm,
@@ -141,6 +116,10 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     lineHeight: 24,
     marginTop: SPACING.sm,
+  },
+  detail: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
   },
   saveButton: {
     backgroundColor: COLORS.card,

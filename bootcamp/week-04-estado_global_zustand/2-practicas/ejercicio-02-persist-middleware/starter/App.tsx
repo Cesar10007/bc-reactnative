@@ -7,6 +7,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import {
   ActivityIndicator,
   FlatList,
@@ -28,58 +29,50 @@ import { useState } from 'react';
 // NOTA DE SINTAXIS: create<T>()( middlewares ) — el doble () es necesario
 // para que TypeScript infiera correctamente los genéricos de los middlewares.
 
-// Descomenta las siguientes líneas:
-// import { persist, createJSONStorage } from 'zustand/middleware';
-//
-// interface Note {
-//   id: string;
-//   text: string;
-//   createdAt: number;
-// }
-//
-// interface NotesStore {
-//   notes: Note[];
-//   isLoading: boolean;
-//   hasHydrated: boolean;
-//   addNote: (text: string) => void;
-//   removeNote: (id: string) => void;
-//   setHydrated: (value: boolean) => void;
-// }
-//
-// const useNotesStore = create<NotesStore>()(
-//   persist(
-//     (set) => ({
-//       notes: [],
-//       isLoading: false,
-//       hasHydrated: false,
-//       addNote: (text) =>
-//         set((state) => ({
-//           notes: [
-//             ...state.notes,
-//             { id: Date.now().toString(), text, createdAt: Date.now() },
-//           ],
-//         })),
-//       removeNote: (id) =>
-//         set((state) => ({
-//           notes: state.notes.filter((n) => n.id !== id),
-//         })),
-//       setHydrated: (value) => set({ hasHydrated: value }),
-//     }),
-//     {
-//       name: 'notes-storage-v1',
-//       storage: createJSONStorage(() => AsyncStorage),
-//       // PASO 2 — Solo persistir `notes` (excluir flags de UI)
-//       // Descomenta la siguiente función:
-//       // partialize: (state) => ({ notes: state.notes }),
-//       //
-//       // PASO 3 — Callback cuando AsyncStorage terminó de cargar
-//       // Descomenta las siguientes líneas:
-//       // onRehydrateStorage: () => (state) => {
-//       //   state?.setHydrated(true);
-//       // },
-//     }
-//   )
-// );
+interface Note {
+  id: string;
+  text: string;
+  createdAt: number;
+}
+
+interface NotesStore {
+  notes: Note[];
+  isLoading: boolean;
+  hasHydrated: boolean;
+  addNote: (text: string) => void;
+  removeNote: (id: string) => void;
+  setHydrated: (value: boolean) => void;
+}
+
+const useNotesStore = create<NotesStore>()(
+  persist(
+    (set) => ({
+      notes: [],
+      isLoading: false,
+      hasHydrated: false,
+      addNote: (text) =>
+        set((state) => ({
+          notes: [
+            ...state.notes,
+            { id: Date.now().toString(), text, createdAt: Date.now() },
+          ],
+        })),
+      removeNote: (id) =>
+        set((state) => ({
+          notes: state.notes.filter((note) => note.id !== id),
+        })),
+      setHydrated: (value) => set({ hasHydrated: value }),
+    }),
+    {
+      name: 'pizza-ruta-zustand-practice',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ notes: state.notes }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated(true);
+      },
+    },
+  ),
+);
 
 // ============================================================
 // COMPONENTE PRINCIPAL
@@ -88,28 +81,19 @@ import { useState } from 'react';
 export default function App(): React.JSX.Element {
   const [inputText, setInputText] = useState('');
 
-  // PASO 1 — Consumir el store (descomenta cuando actives el store arriba)
-  // const notes = useNotesStore((state) => state.notes);
-  // const addNote = useNotesStore((state) => state.addNote);
-  // const removeNote = useNotesStore((state) => state.removeNote);
+  const notes = useNotesStore((state) => state.notes);
+  const addNote = useNotesStore((state) => state.addNote);
+  const removeNote = useNotesStore((state) => state.removeNote);
+  const hasHydrated = useNotesStore((state) => state.hasHydrated);
 
-  // PASO 3 — Leer estado de hidratación
-  // const hasHydrated = useNotesStore((state) => state.hasHydrated);
-
-  // Placeholders mientras el PASO 1 no está activo:
-  const notes: { id: string; text: string; createdAt: number }[] = [];
-  const addNote = (_text: string) => {};
-  const removeNote = (_id: string) => {};
-
-  // PASO 3 — Mostrar pantalla de carga mientras rehidrata:
-  // if (!hasHydrated) {
-  //   return (
-  //     <SafeAreaView style={styles.container}>
-  //       <ActivityIndicator size="large" color="#61DAFB" />
-  //       <Text style={styles.loadingText}>Cargando datos guardados...</Text>
-  //     </SafeAreaView>
-  //   );
-  // }
+  if (!hasHydrated) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#61DAFB" />
+        <Text style={styles.loadingText}>Cargando datos guardados...</Text>
+      </SafeAreaView>
+    );
+  }
 
   function handleAdd(): void {
     if (inputText.trim() === '') return;
@@ -121,16 +105,14 @@ export default function App(): React.JSX.Element {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Ejercicio 02 — Persist</Text>
 
-      {/* PASO 4 — Info sobre persistencia */}
-      {/* Descomenta las siguientes líneas cuando tengas el store activo: */}
-      {/* <View style={styles.infoBox}>
+      <View style={styles.infoBox}>
         <Text style={styles.infoText}>
           Notas guardadas en AsyncStorage: {notes.length}
         </Text>
         <Text style={styles.infoHint}>
           Cierra y reabre la app — las notas deben seguir aquí
         </Text>
-      </View> */}
+      </View>
 
       <View style={styles.inputRow}>
         <TextInput

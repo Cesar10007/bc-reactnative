@@ -2,12 +2,18 @@
 // Pantalla principal: lista de ítems con navegación al detalle.
 // El estudiante debe adaptar el diseño y los campos a su dominio.
 
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
+  TouchableWithoutFeedback,
   View,
   type ListRenderItem,
 } from 'react-native';
@@ -39,23 +45,15 @@ function ItemCard({ item, onPress }: ItemCardProps): React.JSX.Element {
       onPress={onPress}
       testID={`item-card-${item.id}`}
     >
-      {/* Placeholder del thumbnail */}
-      <View style={styles.thumbnail}>
-        {/* TODO: reemplazar con imagen real usando expo-image o Image */}
-        <Text style={styles.thumbnailText}>{item.name.charAt(0)}</Text>
-      </View>
-
+      <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text style={styles.cardDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
-        {/* TODO: agregar campos específicos de tu dominio aquí */}
+        <Text style={styles.cardTitle}>{item.name}</Text>
+        <Text style={styles.cardDescription}>{item.flavor}</Text>
+        <View style={styles.cardFooter}>
+          <Text style={styles.cardDescription}>{item.doughType}</Text>
+          <Text style={styles.price}>${item.price.toLocaleString('es-CO')}</Text>
+        </View>
       </View>
-
-      <Text style={styles.chevron}>›</Text>
     </Pressable>
   );
 }
@@ -66,39 +64,83 @@ function ItemCard({ item, onPress }: ItemCardProps): React.JSX.Element {
 
 export function HomeScreen(): React.JSX.Element {
   const navigation = useNavigation<HomeScreenNavProp>();
+  const [query, setQuery] = useState('');
 
-  // TODO: leer los ítems desde un Zustand store (opcional bonus)
-  // o desde la API real de tu dominio (semana 5 — TanStack Query)
-  const items = ITEMS;
+  const items = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
 
-  const renderItem: ListRenderItem<Item> = ({ item }) => (
-    <ItemCard
-      item={item}
-      onPress={() =>
-        navigation.navigate('HomeDetail', { id: item.id, name: item.name })
-      }
-    />
+    if (!normalizedQuery) {
+      return ITEMS;
+    }
+
+    return ITEMS.filter((item) =>
+      item.name.toLocaleLowerCase().includes(normalizedQuery),
+    );
+  }, [query]);
+
+  const handleItemPress = useCallback(
+    (item: Item): void => {
+      navigation.navigate('HomeDetail', {
+        id: item.id,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        flavor: item.flavor,
+        doughType: item.doughType,
+      });
+    },
+    [navigation],
+  );
+
+  const renderItem: ListRenderItem<Item> = useCallback(
+    ({ item }) => (
+      <ItemCard item={item} onPress={() => handleItemPress(item)} />
+    ),
+    [handleItemPress],
   );
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={items}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.list}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        // TODO: agregar un header con estadísticas (total de ítems, etc.)
-        ListHeaderComponent={
-          <Text style={styles.sectionLabel}>
-            {items.length} ítem{items.length !== 1 ? 's' : ''}
-          </Text>
-        }
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No hay ítems disponibles.</Text>
-        }
-      />
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.inner}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Pizza Ruta</Text>
+            <Text style={styles.headerSubtitle}>
+              Las mejores pizzas a tu puerta
+            </Text>
+          </View>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar pizzas..."
+              placeholderTextColor={COLORS.textMuted}
+              value={query}
+              onChangeText={setQuery}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+              accessibilityLabel="Buscar pizzas"
+            />
+          </View>
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>
+                Sin resultados para "{query}"
+              </Text>
+            }
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -111,9 +153,41 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  inner: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.lg,
+    paddingBottom: SPACING.md,
+  },
+  headerTitle: {
+    ...TYPOGRAPHY.h1,
+  },
+  headerSubtitle: {
+    ...TYPOGRAPHY.caption,
+    marginTop: SPACING.xs,
+  },
+  searchContainer: {
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  searchInput: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 10,
+    color: COLORS.textPrimary,
+    fontSize: 16,
+  },
   list: {
     padding: SPACING.md,
     paddingBottom: SPACING.xl,
+    flexGrow: 1,
   },
   sectionLabel: {
     ...TYPOGRAPHY.label,
@@ -125,33 +199,21 @@ const styles = StyleSheet.create({
     height: SPACING.sm,
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: COLORS.card,
     borderRadius: RADIUS.md,
-    padding: SPACING.md,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: COLORS.border,
-    gap: SPACING.md,
   },
   cardPressed: {
     opacity: 0.7,
   },
-  thumbnail: {
-    width: 48,
-    height: 48,
-    borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  thumbnailText: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.accent,
+  image: {
+    width: '100%',
+    height: 160,
   },
   cardContent: {
-    flex: 1,
-    gap: SPACING.xs,
+    padding: SPACING.md,
   },
   cardTitle: {
     ...TYPOGRAPHY.body,
@@ -160,9 +222,16 @@ const styles = StyleSheet.create({
   cardDescription: {
     ...TYPOGRAPHY.caption,
   },
-  chevron: {
-    ...TYPOGRAPHY.h2,
-    color: COLORS.textMuted,
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: SPACING.sm,
+  },
+  price: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.accent,
+    fontWeight: '600',
   },
   emptyText: {
     ...TYPOGRAPHY.body,

@@ -22,6 +22,9 @@
       },
       "package": "dev.bootcamp.week04zustand"
     },
-    "newArchEnabled": true
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-status-bar"
+    ]
   }
 }
