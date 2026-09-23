@@ -1,8 +1,4 @@
 // src/screens/EditScreen.tsx
-// Formulario para editar un ítem existente.
-// Carga los datos actuales del servidor y rellena el formulario con defaultValues.
-// TODO: conectar useItemById + reset en useEffect + useUpdateItem mutation.
-
 import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
@@ -14,6 +10,8 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -21,93 +19,69 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 import type { RootStackParamList } from '../navigation/types';
 import { FormField } from '../components/FormField';
-
-// TODO: importar useForm y zodResolver
-// import { useForm } from 'react-hook-form';
-// import { zodResolver } from '@hookform/resolvers/zod';
-// import { itemSchema, type ItemFormData } from '../schemas/itemSchema';
-
-// TODO: importar los hooks de datos
-// import { useItemById, useUpdateItem } from '../hooks/useItems';
+import { itemSchema, type ItemFormData } from '../schemas/itemSchema';
+import { useItemById, useUpdateItem } from '../hooks/useItems';
 
 type EditNavProp = NativeStackNavigationProp<RootStackParamList, 'Edit'>;
 type EditRouteProp = RouteProp<RootStackParamList, 'Edit'>;
-
-// ──────────────────────────────────────────────
-// PANTALLA
-// ──────────────────────────────────────────────
 
 export function EditScreen(): React.JSX.Element {
   const navigation = useNavigation<EditNavProp>();
   const route = useRoute<EditRouteProp>();
   const { id } = route.params;
 
-  // TODO: obtener el ítem actual del servidor
-  // ─────────────────────────────────────────────
-  // const { data: item, isLoading } = useItemById(id);
+  const { data: item, isLoading } = useItemById(id);
 
-  // Placeholder hasta que implementes el TODO
-  const isLoading = false;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const item: any = undefined;
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<ItemFormData>({
+    resolver: zodResolver(itemSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      price: '',
+      flavor: '',
+      doughType: 'delgada',
+    },
+  });
 
-  // TODO: inicializar useForm con zodResolver
-  // ─────────────────────────────────────────────
-  // const {
-  //   control,
-  //   handleSubmit,
-  //   reset,
-  //   formState: { errors, isSubmitting, isDirty },
-  // } = useForm<ItemFormData>({
-  //   resolver: zodResolver(itemSchema),
-  //   defaultValues: { title: '', body: '' },
-  // });
-
-  // Placeholders
-  const isSubmitting = false;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const errors: any = {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const control: any = undefined;
-  const isDirty = true;
-
-  // TODO: cuando el ítem se carga del servidor, rellenar el formulario.
-  // ─────────────────────────────────────────────
-  // Patrón clave de esta semana: reset() + useEffect
-  //
-  // useEffect(() => {
-  //   if (item) {
-  //     reset({
-  //       title: item.title,
-  //       body: item.body ?? '',
-  //       // TODO: agrega los campos de tu dominio aquí
-  //     });
-  //   }
-  // }, [item, reset]);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Remove this useEffect once you implement the real one above.
-  }, [item]);
+    if (item) {
+      reset({
+        name: item.name,
+        description: item.description ?? '',
+        price: String(item.price),
+        flavor: item.flavor,
+        doughType: item.doughType,
+      });
+    }
+  }, [item, reset]);
 
-  // TODO: inicializar la mutation de actualización
-  // const { mutate: updateItem, isPending } = useUpdateItem();
-  const isPending = false;
+  const { mutate: updateItem, isPending } = useUpdateItem();
 
-  // TODO: implementar la función onSubmit
-  // ─────────────────────────────────────────────
-  // function onSubmit(data: ItemFormData): void {
-  //   updateItem(
-  //     { id, title: data.title, body: data.body ?? '', userId: 1 },
-  //     {
-  //       onSuccess: () => navigation.goBack(),
-  //     },
-  //   );
-  // }
+  const onSubmit: SubmitHandler<ItemFormData> = (data) => {
+    updateItem(
+      {
+        id,
+        name: data.name,
+        description: data.description ?? '',
+        price: Number(data.price),
+        flavor: data.flavor,
+        doughType: data.doughType,
+        image: item?.image ?? 'https://picsum.photos/id/292/300/200',
+      },
+      {
+        onSuccess: () => navigation.goBack(),
+      },
+    );
+  };
 
-  const canSubmit = !isSubmitting && !isPending && isDirty;
+  const submitting = isSubmitting || isPending;
+  const canSubmit = !submitting && isDirty;
 
-  // Mientras carga los datos del servidor, mostrar indicador de carga
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -127,59 +101,86 @@ export function EditScreen(): React.JSX.Element {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.hint}>
-          Los campos se rellenan automáticamente con los datos actuales del ítem.
+          Los campos se rellenan automáticamente con los datos actuales de la pizza.
           Modifica lo que necesites y guarda.
         </Text>
 
-        {/* TODO: usa los mismos FormField que en CreateScreen */}
-
-        <FormField
+        <FormField<ItemFormData>
           control={control}
-          name="title"
-          label="Nombre *"
-          placeholder="Nombre del ítem…"
+          name="name"
+          label="Nombre de la pizza *"
+          placeholder="Ej. Pizza Ranchera"
           returnKeyType="next"
-          errorMessage={errors.title?.message}
+          errorMessage={errors.name?.message}
         />
 
-        <FormField
+        <FormField<ItemFormData>
           control={control}
-          name="body"
+          name="flavor"
+          label="Sabor *"
+          placeholder="Ej. Pollo, tocineta y maíz"
+          returnKeyType="next"
+          errorMessage={errors.flavor?.message}
+        />
+
+        <FormField<ItemFormData>
+          control={control}
+          name="price"
+          label="Precio *"
+          placeholder="Ej. 32000"
+          keyboardType="numeric"
+          returnKeyType="next"
+          errorMessage={errors.price?.message}
+        />
+
+        <FormField<ItemFormData>
+          control={control}
+          name="doughType"
+          label="Tipo de masa *"
+          placeholder="delgada o gruesa"
+          autoCapitalize="none"
+          returnKeyType="next"
+          errorMessage={errors.doughType?.message}
+        />
+
+        <FormField<ItemFormData>
+          control={control}
+          name="description"
           label="Descripción"
-          placeholder="Descripción opcional…"
+          placeholder="Describe los ingredientes de la pizza..."
           multiline
           numberOfLines={4}
           textAlignVertical="top"
-          errorMessage={errors.body?.message}
+          errorMessage={errors.description?.message}
         />
-
-        {/* TODO: agrega los campos adicionales de tu dominio */}
 
         <View style={styles.actions}>
           <Pressable
             style={[styles.button, !canSubmit && styles.buttonDisabled]}
-            // onPress={handleSubmit(onSubmit)}   ← descomentar al implementar
+            onPress={handleSubmit(onSubmit)}
             disabled={!canSubmit}
+            accessibilityRole="button"
+            accessibilityLabel="Guardar cambios"
           >
-            {isSubmitting || isPending
-              ? <ActivityIndicator size="small" color={COLORS.background} />
-              : <Text style={styles.buttonText}>Guardar cambios</Text>
-            }
+            {submitting ? (
+              <ActivityIndicator size="small" color={COLORS.background} />
+            ) : (
+              <Text style={styles.buttonText}>Guardar cambios</Text>
+            )}
           </Pressable>
 
-          <Pressable style={styles.cancel} onPress={() => navigation.goBack()}>
+          <Pressable
+            style={styles.cancel}
+            onPress={() => navigation.goBack()}
+            disabled={submitting}
+          >
             <Text style={styles.cancelText}>Cancelar</Text>
           </Pressable>
         </View>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-// ──────────────────────────────────────────────
-// ESTILOS
-// ──────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: COLORS.background },
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonDisabled: { opacity: 0.45 },
-  buttonText: { ...TYPOGRAPHY.body, fontWeight: '700' },
+  buttonText: { ...TYPOGRAPHY.body, fontWeight: '700', color: COLORS.background },
   cancel: { alignItems: 'center', padding: SPACING.sm },
   cancelText: { ...TYPOGRAPHY.body, color: COLORS.textMuted },
 });
