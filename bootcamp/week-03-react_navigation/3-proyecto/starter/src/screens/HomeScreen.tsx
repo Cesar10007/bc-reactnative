@@ -2,18 +2,24 @@
 // Pantalla de lista — muestra todos los elementos del dominio.
 // Al presionar un ítem navega al DetailScreen pasando los params.
 
+import React, { useCallback, useMemo, useState } from 'react';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import {
   FlatList,
-  Pressable,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
+  TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 
 import { ITEMS } from '../data/mockData';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import { ItemCard } from '../components/ItemCard';
+import { COLORS, SPACING, TYPOGRAPHY } from '../theme';
 import type { Item } from '../types';
 import type { HomeStackParamList } from '../navigation/types';
 
@@ -25,63 +31,93 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
 
 export function HomeScreen(): React.JSX.Element {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const [query, setQuery] = useState('');
 
-  /**
-   * Navega al DetailScreen pasando los datos del ítem seleccionado.
-   * TODO: agrega los campos extra de tu dominio a los params
-   * Ejemplo: navigation.navigate('HomeDetail', { id, name, author, isbn })
-   */
-  function handleItemPress(item: Item): void {
-    navigation.navigate('HomeDetail', {
-      id: item.id,
-      name: item.name,
-      // TODO: pasar campos adicionales de tu dominio
-    });
-  }
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
 
-  /**
-   * Renderiza cada ítem de la lista.
-   * TODO: adaptar el diseño de la tarjeta a tu dominio.
-   * Puedes mostrar más información (precio, autor, género, etc.)
-   */
-  function renderItem({ item }: { item: Item }): React.JSX.Element {
-    return (
-      <Pressable
-        style={({ pressed }) => [
-          styles.card,
-          pressed && styles.cardPressed,
-        ]}
-        onPress={() => handleItemPress(item)}
-        // testID permite encontrar el elemento en tests
-        testID={`item-${item.id}`}
-      >
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
-        {/* TODO: agregar más información del ítem según tu dominio */}
-        {/* Ejemplo (Farmacia): <Text style={styles.price}>${item.price}</Text> */}
-        {/* Ejemplo (Biblioteca): <Text style={styles.author}>{item.author}</Text> */}
-        <Text style={styles.chevron}>{'›'}</Text>
-      </Pressable>
+    if (!normalizedQuery) {
+      return ITEMS;
+    }
+
+    return ITEMS.filter((item) =>
+      item.name.toLocaleLowerCase().includes(normalizedQuery),
     );
-  }
+  }, [query]);
+
+  const handleItemPress = useCallback(
+    (item: Item): void => {
+      navigation.navigate('HomeDetail', {
+        id: item.id,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        flavor: item.flavor,
+        doughType: item.doughType,
+      });
+    },
+    [navigation],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Item }): React.JSX.Element => (
+      <ItemCard item={item} onPress={handleItemPress} />
+    ),
+    [handleItemPress],
+  );
+
+  const renderEmpty = useCallback(
+    (): React.JSX.Element => (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>Sin resultados para "{query}"</Text>
+        <Text style={styles.emptySubText}>
+          Prueba con otro nombre de pizza.
+        </Text>
+      </View>
+    ),
+    [query],
+  );
 
   return (
-    <View style={styles.container}>
-      {/* TODO: agregar un header o título descriptivo de tu dominio */}
-      {/* <Text style={styles.header}>Mi Biblioteca</Text> */}
-      <FlatList
-        data={ITEMS}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.list}
-        // Separador visual entre ítems
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        // TODO: agregar ListEmptyComponent para cuando no haya datos
-        // ListEmptyComponent={<Text style={styles.empty}>Sin elementos</Text>}
-      />
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.inner}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Pizza Ruta</Text>
+            <Text style={styles.headerSubtitle}>
+              Las mejores pizzas a tu puerta
+            </Text>
+          </View>
+
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar pizzas..."
+              placeholderTextColor={COLORS.textMuted}
+              value={query}
+              onChangeText={setQuery}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+              accessibilityLabel="Buscar pizzas"
+            />
+          </View>
+
+          <FlatList
+            data={filteredItems}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            ListEmptyComponent={renderEmpty}
+            contentContainerStyle={styles.list}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -90,39 +126,65 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  list: {
-    padding: SPACING.base,
+  inner: {
+    flex: 1,
   },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
-    padding: SPACING.base,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+  header: {
+    paddingHorizontal: SPACING.base,
+    paddingTop: SPACING.lg,
+    paddingBottom: SPACING.md,
   },
-  cardPressed: {
-    opacity: 0.7,
-    backgroundColor: COLORS.surfaceAlt,
-  },
-  itemName: {
-    fontSize: TYPOGRAPHY.size.md,
-    fontWeight: TYPOGRAPHY.weight.semibold,
+  headerTitle: {
+    fontSize: TYPOGRAPHY.size.xxl,
+    fontWeight: TYPOGRAPHY.weight.bold,
     color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
   },
-  itemDescription: {
+  headerSubtitle: {
+    marginTop: SPACING.xs,
     fontSize: TYPOGRAPHY.size.sm,
     color: COLORS.textSecondary,
-    lineHeight: 18,
   },
-  chevron: {
-    position: 'absolute',
-    right: SPACING.base,
-    top: '50%',
-    fontSize: TYPOGRAPHY.size.xl,
-    color: COLORS.textMuted,
+  searchContainer: {
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+  },
+  searchInput: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 10,
+    color: COLORS.textPrimary,
+    fontSize: TYPOGRAPHY.size.base,
+  },
+  list: {
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.xl,
+    flexGrow: 1,
   },
   separator: {
     height: SPACING.sm,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 80,
+    paddingHorizontal: SPACING.xxl,
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.size.md,
+    fontWeight: TYPOGRAPHY.weight.semibold,
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+    marginBottom: SPACING.sm,
+  },
+  emptySubText: {
+    fontSize: TYPOGRAPHY.size.sm,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
   },
 });

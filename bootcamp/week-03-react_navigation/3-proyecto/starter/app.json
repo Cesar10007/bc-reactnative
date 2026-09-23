@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "week03-navigation",
-    "slug": "week03-navigation",
-    "version": "1.0.0",
+    "name": "Pizza Ruta",
+    "slug": "pizza-ruta-w3",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -22,9 +22,9 @@
       },
       "package": "dev.bootcamp.week03navigation"
     },
+    "newArchEnabled": true,
     "plugins": [
-      "expo-router"
-    ],
-    "newArchEnabled": true
+      "expo-status-bar"
+    ]
   }
 }
