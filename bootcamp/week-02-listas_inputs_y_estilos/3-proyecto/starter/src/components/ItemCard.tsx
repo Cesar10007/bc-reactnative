@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { Item } from '../types';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../theme';
 
@@ -21,32 +21,15 @@ export function ItemCard({ item, onPress }: ItemCardProps): React.JSX.Element {
       ]}
       onPress={() => onPress(item)}
       accessibilityRole="button"
-      accessibilityLabel={item.name}
+      accessibilityLabel={`${item.name}, ${item.price.toLocaleString('es-CO')} pesos`}
     >
-      {/* Nombre principal del elemento */}
+      <Image source={{ uri: item.image }} style={styles.image} />
       <Text style={styles.itemName}>{item.name}</Text>
-
-      {/* TODO: Mostrar los campos adicionales de tu dominio */}
-      {/* Ejemplos:
-        Biblioteca:
-          <Text style={styles.fieldText}>{item.author}</Text>
-          <Text style={styles.fieldText}>{item.available ? 'Disponible' : 'Prestado'}</Text>
-
-        Farmacia:
-          <Text style={styles.fieldText}>${item.price}</Text>
-          <Text style={styles.fieldText}>Stock: {item.stock}</Text>
-
-        Gimnasio:
-          <Text style={styles.fieldText}>Plan: {item.plan}</Text>
-          <Text style={styles.fieldText}>Vence: {item.expiresAt}</Text>
-      */}
-
-      {/* TODO: Si tu dominio tiene un badge de estado/categoría, agrégalo aquí */}
-      {/* Ejemplo:
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{item.category}</Text>
-        </View>
-      */}
+      <Text style={styles.fieldText}>{item.flavor}</Text>
+      <View style={styles.footer}>
+        <Text style={styles.fieldText}>{item.doughType}</Text>
+        <Text style={styles.price}>${item.price.toLocaleString('es-CO')}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -55,9 +38,9 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.md,
-    padding: SPACING.base,
     marginHorizontal: SPACING.base,
     marginVertical: SPACING.xs,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: COLORS.border,
   },
@@ -69,24 +52,30 @@ const styles = StyleSheet.create({
     fontWeight: TYPOGRAPHY.weight.semibold,
     color: COLORS.textPrimary,
     marginBottom: SPACING.xs,
+    paddingHorizontal: SPACING.base,
+    marginTop: SPACING.md,
   },
   fieldText: {
     fontSize: TYPOGRAPHY.size.sm,
     color: COLORS.textSecondary,
     marginBottom: 2,
+    paddingHorizontal: SPACING.base,
   },
-  badge: {
-    alignSelf: 'flex-start',
+  image: {
+    width: '100%',
+    height: 160,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: SPACING.sm,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.accentDim,
+    paddingBottom: SPACING.base,
   },
-  badgeText: {
-    fontSize: TYPOGRAPHY.size.xs,
+  price: {
+    fontSize: TYPOGRAPHY.size.base,
     fontWeight: TYPOGRAPHY.weight.semibold,
     color: COLORS.accent,
-    textTransform: 'capitalize',
+    paddingHorizontal: SPACING.base,
   },
 });
