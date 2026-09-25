@@ -34,31 +34,17 @@ export function RegisterScreen({ navigation }: RegisterScreenProps): React.JSX.E
     },
   });
 
-  /**
-   * TODO: Implementar onSubmit para el registro.
-   *
-   * Pasos:
-   * 1. Llamar a register({ username, email, password }) del authStore
-   *    - Nota: no enviar confirmPassword al servidor
-   * 2. Si hay error → mostrar Alert
-   * 3. Si tiene éxito → el RootNavigator navegará a AppNavigator automáticamente
-   *
-   * Pista:
-   * const onSubmit = async (values: RegisterFormValues) => {
-   *   try {
-   *     await register({
-   *       username: values.username,
-   *       email: values.email,
-   *       password: values.password,
-   *     });
-   *   } catch {
-   *     Alert.alert('Error', 'No se pudo crear la cuenta');
-   *   }
-   * };
-   */
-  const onSubmit = async (_values: RegisterFormValues) => {
-    // TODO: Implementar
-    Alert.alert('TODO', 'Implementa onSubmit en RegisterScreen.tsx');
+  const onSubmit = async (values: RegisterFormValues) => {
+    try {
+      await register({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+      });
+    } catch {
+      const message = useAuthStore.getState().error ?? 'No fue posible crear la cuenta';
+      Alert.alert('Error de registro', message);
+    }
   };
 
   return (

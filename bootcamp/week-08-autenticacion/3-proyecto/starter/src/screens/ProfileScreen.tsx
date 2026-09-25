@@ -1,176 +1,60 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { getProfile } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
+import { useSavedStore } from '../stores/savedStore';
 import { theme } from '../theme';
 
 export function ProfileScreen(): React.JSX.Element {
-  const user = useAuthStore((state) => state.user);
+  const storedUser = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const favoriteCount = useSavedStore((state) => state.items.length);
+  const { data } = useQuery({
+    queryKey: ['auth-profile', storedUser?.id],
+    queryFn: getProfile,
+    enabled: Boolean(storedUser),
+  });
+  const user = data ?? storedUser;
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Cerrar sesión',
-      '¿Estás seguro de que quieres salir?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Salir',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            // RootNavigator detectará isAuthenticated === false y mostrará AuthNavigator
-          },
-        },
-      ],
-    );
-  };
-
-  /**
-   * TODO: Mostrar datos del usuario del dominio asignado.
-   *
-   * Ejemplos de secciones que puedes agregar:
-   * - Biblioteca: "Libros prestados: 3", "Fecha de devolución: ..."
-   * - Farmacia: "Compras del mes: 5", "Saldo: $25,000"
-   * - Gimnasio: "Membresía: Premium", "Clases asistidas: 12"
-   * - Restaurante: "Pedidos realizados: 7", "Puntos de fidelidad: 350"
-   *
-   * Para mostrar datos dinámicos, usa useQuery con getProfile de authService.
-   * Los datos del usuario básico ya están en useAuthStore.user
-   */
+  function confirmLogout(): void {
+    Alert.alert('Cerrar sesión', '¿Quieres salir de Pizza Ruta?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Salir', style: 'destructive', onPress: () => void logout() },
+    ]);
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Avatar placeholder */}
-      <View style={styles.avatarContainer}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user?.firstName?.[0]?.toUpperCase() ?? user?.username?.[0]?.toUpperCase() ?? '?'}
-          </Text>
-        </View>
-        <Text style={styles.name}>
-          {/* TODO: Mostrar nombre completo del usuario */}
-          {user ? `${user.firstName} ${user.lastName}` : 'Usuario'}
-        </Text>
-        <Text style={styles.email}>
-          {/* TODO: Mostrar email del usuario */}
-          {user?.email ?? '—'}
-        </Text>
+      {user?.image ? <Image source={{ uri: user.image }} style={styles.avatar} /> : null}
+      <Text style={styles.name}>{user ? `${user.firstName} ${user.lastName}` : 'Cliente Pizza Ruta'}</Text>
+      <Text style={styles.email}>{user?.email ?? '—'}</Text>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Mi cuenta de delivery</Text>
+        <View style={styles.row}><Text style={styles.label}>Usuario</Text><Text style={styles.value}>{user?.username ?? '—'}</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Pizzas favoritas</Text><Text style={styles.value}>{favoriteCount}</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Beneficio</Text><Text style={styles.value}>Cliente Pizza Ruta</Text></View>
       </View>
 
-      {/* Información del dominio */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Información de la cuenta</Text>
-
-        {/* TODO: Agrega filas de información relevante a tu dominio */}
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Usuario</Text>
-          <Text style={styles.infoValue}>{user?.username ?? '—'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>ID</Text>
-          <Text style={styles.infoValue}>{user?.id ?? '—'}</Text>
-        </View>
-
-        {/* TODO: Agrega más filas específicas de tu dominio */}
-        {/* Ejemplo:
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Membresía</Text>
-          <Text style={styles.infoValue}>Premium</Text>
-        </View>
-        */}
-      </View>
-
-      {/* Logout */}
-      <Pressable style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
-      </Pressable>
+      <Text style={styles.security}>Tus tokens se almacenan cifrados en SecureStore y nunca se muestran en pantalla.</Text>
+      <Pressable style={styles.logout} onPress={confirmLogout}><Text style={styles.logoutText}>Cerrar sesión</Text></Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  content: {
-    padding: theme.spacing.md,
-    paddingTop: theme.spacing.xl,
-    gap: theme.spacing.xl,
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  name: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  email: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
-  section: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: '700',
-    color: theme.colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: theme.spacing.xs,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  infoLabel: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textSecondary,
-  },
-  infoValue: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.text,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    backgroundColor: theme.colors.danger,
-    borderRadius: theme.radius.md,
-    padding: 14,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: theme.fontSize.md,
-  },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  content: { padding: theme.spacing.lg, alignItems: 'center', gap: theme.spacing.md },
+  avatar: { width: 92, height: 92, borderRadius: 46 },
+  name: { color: theme.colors.text, fontSize: theme.fontSize.xl, fontWeight: '700' },
+  email: { color: theme.colors.textSecondary, fontSize: theme.fontSize.sm },
+  card: { width: '100%', backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, padding: theme.spacing.md, gap: theme.spacing.sm },
+  cardTitle: { color: theme.colors.brand, fontSize: theme.fontSize.lg, fontWeight: '700' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: theme.colors.border, paddingVertical: theme.spacing.sm },
+  label: { color: theme.colors.textSecondary },
+  value: { color: theme.colors.text, fontWeight: '600' },
+  security: { color: theme.colors.textMuted, textAlign: 'center', fontSize: theme.fontSize.sm },
+  logout: { width: '100%', backgroundColor: theme.colors.danger, borderRadius: theme.radius.md, padding: 14, alignItems: 'center' },
+  logoutText: { color: '#fff', fontWeight: '700' },
 });

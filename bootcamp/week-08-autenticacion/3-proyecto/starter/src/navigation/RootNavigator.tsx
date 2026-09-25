@@ -1,18 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../stores/authStore';
 import { AuthNavigator } from './AuthNavigator';
 import { AppNavigator } from './AppNavigator';
+import { theme } from '../theme';
 
-/**
- * RootNavigator — Punto de entrada de la navegación.
- *
- * Cambia entre AuthNavigator y AppNavigator según isAuthenticated.
- * React Navigation anima la transición automáticamente.
- */
 export function RootNavigator(): React.JSX.Element {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
+  const initialize = useAuthStore((state) => state.initialize);
+
+  useEffect(() => { void initialize(); }, [initialize]);
+
+  if (!isInitialized) {
+    return (
+      <View style={styles.loading}>
+        <StatusBar style="light" />
+        <ActivityIndicator size="large" color={theme.colors.brand} />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
@@ -21,3 +30,7 @@ export function RootNavigator(): React.JSX.Element {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.background },
+});
