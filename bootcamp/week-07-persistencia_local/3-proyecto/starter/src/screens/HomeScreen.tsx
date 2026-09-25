@@ -53,9 +53,18 @@ export function HomeScreen({ navigation }: HomeScreenProps): React.JSX.Element {
     const filtered = (data?.items ?? []).filter((item) =>
       !normalized || `${item.name} ${item.flavor}`.toLocaleLowerCase('es').includes(normalized),
     );
-    filtered.sort((a, b) =>
-      sortOrder === 'asc' ? a.name.localeCompare(b.name, 'es') : b.name.localeCompare(a.name, 'es'),
-    );
+    filtered.sort((a, b) => {
+      const aIsLocal = String(a.id).startsWith('local-');
+      const bIsLocal = String(b.id).startsWith('local-');
+
+      // Las pizzas recién creadas siempre quedan visibles al inicio, aunque la
+      // preferencia limite el catálogo a 5 o 10 resultados.
+      if (aIsLocal !== bIsLocal) return aIsLocal ? -1 : 1;
+
+      return sortOrder === 'asc'
+        ? a.name.localeCompare(b.name, 'es')
+        : b.name.localeCompare(a.name, 'es');
+    });
     return filtered.slice(0, itemsPerPage);
   }, [data?.items, itemsPerPage, query, sortOrder]);
 
