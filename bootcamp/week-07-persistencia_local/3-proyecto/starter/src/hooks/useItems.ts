@@ -12,6 +12,7 @@ import type {
 export const ITEMS_QUERY_KEY = ['pizzas'] as const;
 export const PIZZAS_CACHE_KEY = '@pizza_ruta/pizzas_cache';
 const LOCAL_PIZZAS_KEY = '@pizza_ruta/local_pizzas';
+const DELETED_PIZZA_IDS_KEY = '@pizza_ruta/deleted_pizza_ids';
 
 interface RemotePost {
   id: number;
@@ -66,6 +67,7 @@ export async function clearPizzaRutaLocalData(): Promise<void> {
   await AsyncStorage.multiRemove([
     PIZZAS_CACHE_KEY,
     LOCAL_PIZZAS_KEY,
+    DELETED_PIZZA_IDS_KEY,
     '@pizza_ruta/last_sync',
   ]);
 }
@@ -79,16 +81,29 @@ async function saveLocalPizzas(items: Item[]): Promise<void> {
   await AsyncStorage.setItem(LOCAL_PIZZAS_KEY, JSON.stringify(items));
 }
 
+async function getDeletedPizzaIds(): Promise<string[]> {
+  const value = await AsyncStorage.getItem(DELETED_PIZZA_IDS_KEY);
+  return value ? (JSON.parse(value) as string[]) : [];
+}
+
+async function saveDeletedPizzaIds(ids: string[]): Promise<void> {
+  await AsyncStorage.setItem(DELETED_PIZZA_IDS_KEY, JSON.stringify(ids));
+}
+
 export function useItems() {
   return useQuery<ItemsWithSource>({
     queryKey: ITEMS_QUERY_KEY,
     queryFn: async () => {
       try {
-        const [{ data }, localPizzas] = await Promise.all([
+        const [{ data }, localPizzas, deletedIds] = await Promise.all([
           apiClient.get<RemotePost[]>('/posts?_limit=15'),
           getLocalPizzas(),
+          getDeletedPizzaIds(),
         ]);
-        const items = [...localPizzas, ...data.map(mapRemotePost)];
+        const deleted = new Set(deletedIds);
+        const items = [...localPizzas, ...data.map(mapRemotePost)].filter(
+          (item) => !deleted.has(String(item.id)),
+        );
         await saveCache(items);
         await AsyncStorage.setItem('@pizza_ruta/last_sync', new Date().toISOString());
         return { items, source: 'network' };
@@ -152,11 +167,52 @@ export function useCreateItem() {
       const localPizzas = items.filter((item) =>
         String(item.id).startsWith('local-'),
       );
-      void Promise.all([saveCache(items), saveLocalPizzas(localPizzas)]).catch(
-        (error: unknown) => {
-          console.error('No se pudo actualizar la caché de pizzas:', error);
-        },
+      void Promise.all([
+        saveCache(items),
+        saveLocalPizzas(localPizzas),
+        queryClient.invalidateQueries({
+          queryKey: ITEMS_QUERY_KEY,
+          refetchType: 'none',
+        }),
+      ]).catch((error: unknown) => {
+        console.error('No se pudo actualizar la caché de pizzas:', error);
+      });
+    },
+  });
+}
+
+export function useDeleteItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, Item['id']>({
+    mutationFn: async (id) => {
+      if (!String(id).startsWith('local-')) {
+        void apiClient.delete(`/posts/${id}`).catch(() => undefined);
+      }
+    },
+    onSuccess: async (_data, id) => {
+      const current = queryClient.getQueryData<ItemsWithSource>(ITEMS_QUERY_KEY);
+      const items = (current?.items ?? []).filter(
+        (item) => String(item.id) !== String(id),
       );
+      queryClient.setQueryData<ItemsWithSource>(ITEMS_QUERY_KEY, {
+        items,
+        source: current?.source ?? 'network',
+      });
+      queryClient.removeQueries({ queryKey: [...ITEMS_QUERY_KEY, id] });
+
+      const [deletedIds] = await Promise.all([
+        getDeletedPizzaIds(),
+        saveCache(items),
+      ]);
+      const nextDeletedIds = Array.from(new Set([...deletedIds, String(id)]));
+      const localPizzas = items.filter((item) =>
+        String(item.id).startsWith('local-'),
+      );
+      await Promise.all([
+        saveDeletedPizzaIds(nextDeletedIds),
+        saveLocalPizzas(localPizzas),
+      ]);
     },
   });
 }
@@ -183,7 +239,10 @@ export function useUpdateItem() {
         source: current?.source ?? 'network',
       });
       queryClient.setQueryData([...ITEMS_QUERY_KEY, updatedItem.id], updatedItem);
-      await saveCache(items);
+      const localPizzas = items.filter((item) =>
+        String(item.id).startsWith('local-'),
+      );
+      await Promise.all([saveCache(items), saveLocalPizzas(localPizzas)]);
     },
   });
 }
