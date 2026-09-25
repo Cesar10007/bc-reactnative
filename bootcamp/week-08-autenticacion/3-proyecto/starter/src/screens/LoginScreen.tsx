@@ -52,6 +52,12 @@ export function LoginScreen({ navigation }: LoginScreenProps): React.JSX.Element
         <Text style={styles.subtitle}>Ingresa tus credenciales para continuar</Text>
       </View>
 
+      <View style={styles.demoBox}>
+        <Text style={styles.demoTitle}>Cuenta de demostración</Text>
+        <Text style={styles.demoText}>Usuario: emilys</Text>
+        <Text style={styles.demoText}>Contraseña: emilyspass</Text>
+      </View>
+
       <View style={styles.form}>
         <Controller
           control={control}
@@ -133,6 +139,23 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: theme.fontSize.md,
     color: theme.colors.textSecondary,
+  },
+  demoBox: {
+    backgroundColor: theme.colors.surface,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.brand,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    gap: theme.spacing.xs,
+  },
+  demoTitle: {
+    color: theme.colors.brand,
+    fontWeight: '700',
+    fontSize: theme.fontSize.sm,
+  },
+  demoText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSize.sm,
   },
   form: {
     gap: theme.spacing.md,
