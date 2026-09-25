@@ -1,7 +1,7 @@
-import React from 'react';
+// src/screens/EditScreen.tsx
+import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,27 +10,35 @@ import {
   Text,
   View,
 } from 'react-native';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import type { RootStackParamList } from '../navigation/types';
 import { FormField } from '../components/FormField';
 import { FormSelectField } from '../components/FormSelectField';
-import { useCreateItem } from '../hooks/useItems';
-import type { RootStackParamList } from '../navigation/types';
 import { itemSchema, type ItemFormData } from '../schemas/itemSchema';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import { useItemById, useUpdateItem } from '../hooks/useItems';
+import { useSavedStore } from '../stores/savedStore';
 
-type CreateNavProp = NativeStackNavigationProp<RootStackParamList, 'Create'>;
+type EditNavProp = NativeStackNavigationProp<RootStackParamList, 'Edit'>;
+type EditRouteProp = RouteProp<RootStackParamList, 'Edit'>;
 
-export function CreateScreen(): React.JSX.Element {
-  const navigation = useNavigation<CreateNavProp>();
+export function EditScreen(): React.JSX.Element {
+  const navigation = useNavigation<EditNavProp>();
+  const route = useRoute<EditRouteProp>();
+  const { id } = route.params;
+
+  const { data: item, isLoading } = useItemById(id);
 
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    reset,
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<ItemFormData>({
     resolver: zodResolver(itemSchema),
     defaultValues: {
@@ -42,28 +50,51 @@ export function CreateScreen(): React.JSX.Element {
     },
   });
 
-  const { mutate: createItem, isPending } = useCreateItem();
+  useEffect(() => {
+    if (item) {
+      reset({
+        name: item.name,
+        description: item.description ?? '',
+        price: String(item.price),
+        flavor: item.flavor,
+        doughType: item.doughType,
+      });
+    }
+  }, [item, reset]);
+
+  const { mutate: updateItem, isPending } = useUpdateItem();
+  const updateFavorite = useSavedStore((state) => state.updateItem);
 
   const onSubmit: SubmitHandler<ItemFormData> = (data) => {
-    createItem(
+    updateItem(
       {
+        id,
         name: data.name,
         description: data.description ?? '',
         price: Number(data.price),
         flavor: data.flavor,
         doughType: data.doughType,
-        image: 'https://picsum.photos/id/292/300/200',
+        image: item?.image ?? 'https://picsum.photos/id/292/300/200',
       },
       {
-        onSuccess: () => navigation.goBack(),
-        onError: () => {
-          Alert.alert('No se pudo crear', 'Revisa los datos e inténtalo nuevamente.');
+        onSuccess: (updatedItem) => {
+          updateFavorite(updatedItem);
+          navigation.goBack();
         },
       },
     );
   };
 
   const submitting = isSubmitting || isPending;
+  const canSubmit = !submitting && isDirty;
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={COLORS.accent} />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -79,7 +110,8 @@ export function CreateScreen(): React.JSX.Element {
         automaticallyAdjustKeyboardInsets
       >
         <Text style={styles.hint}>
-          Completa los datos de la nueva pizza. Los campos marcados con * son obligatorios.
+          Los campos se rellenan automáticamente con los datos actuales de la pizza.
+          Modifica lo que necesites y guarda.
         </Text>
 
         <FormField<ItemFormData>
@@ -134,16 +166,16 @@ export function CreateScreen(): React.JSX.Element {
 
         <View style={styles.actions}>
           <Pressable
-            style={[styles.button, submitting && styles.buttonDisabled]}
+            style={[styles.button, !canSubmit && styles.buttonDisabled]}
             onPress={handleSubmit(onSubmit)}
-            disabled={submitting}
+            disabled={!canSubmit}
             accessibilityRole="button"
-            accessibilityLabel="Crear pizza"
+            accessibilityLabel="Guardar cambios"
           >
             {submitting ? (
               <ActivityIndicator size="small" color={COLORS.background} />
             ) : (
-              <Text style={styles.buttonText}>Crear pizza</Text>
+              <Text style={styles.buttonText}>Guardar cambios</Text>
             )}
           </Pressable>
 
@@ -161,46 +193,20 @@ export function CreateScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: SPACING.lg,
-    gap: SPACING.md,
-    paddingBottom: 180,
-  },
-  hint: {
-    ...TYPOGRAPHY.caption,
-    fontStyle: 'italic',
-  },
-  actions: {
-    gap: SPACING.sm,
-    marginTop: SPACING.sm,
-  },
+  flex: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1 },
+  content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: 180 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background },
+  hint: { ...TYPOGRAPHY.caption, fontStyle: 'italic' },
+  actions: { gap: SPACING.sm, marginTop: SPACING.sm },
   button: {
     backgroundColor: COLORS.accent,
     borderRadius: RADIUS.sm,
     padding: SPACING.md,
     alignItems: 'center',
   },
-  buttonDisabled: {
-    opacity: 0.45,
-  },
-  buttonText: {
-    ...TYPOGRAPHY.body,
-    fontWeight: '700',
-    color: COLORS.background,
-  },
-  cancel: {
-    alignItems: 'center',
-    padding: SPACING.sm,
-  },
-  cancelText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textMuted,
-  },
+  buttonDisabled: { opacity: 0.45 },
+  buttonText: { ...TYPOGRAPHY.body, fontWeight: '700', color: COLORS.background },
+  cancel: { alignItems: 'center', padding: SPACING.sm },
+  cancelText: { ...TYPOGRAPHY.body, color: COLORS.textMuted },
 });
