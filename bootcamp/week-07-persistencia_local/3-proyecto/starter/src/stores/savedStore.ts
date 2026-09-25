@@ -8,6 +8,7 @@ interface SavedStore {
   items: Item[];
   addItem: (item: Item) => void;
   removeItem: (id: Item['id']) => void;
+  updateItem: (item: Item) => void;
   clearAll: () => void;
   isItemSaved: (id: Item['id']) => boolean;
 }
@@ -24,6 +25,12 @@ export const useSavedStore = create<SavedStore>()(
       removeItem: (id) =>
         set((state) => ({
           items: state.items.filter((item) => String(item.id) !== String(id)),
+        })),
+      updateItem: (updatedItem) =>
+        set((state) => ({
+          items: state.items.map((item) =>
+            String(item.id) === String(updatedItem.id) ? updatedItem : item,
+          ),
         })),
       clearAll: () => set({ items: [] }),
       isItemSaved: (id) =>
