@@ -32,28 +32,13 @@ export function LoginScreen({ navigation }: LoginScreenProps): React.JSX.Element
     },
   });
 
-  /**
-   * TODO: Implementar onSubmit.
-   *
-   * Pasos:
-   * 1. Llamar a login(values) del authStore
-   * 2. Si hay error (catch), mostrar Alert con el mensaje
-   * 3. Si tiene éxito, el RootNavigator navegará automáticamente a AppNavigator
-   *    (no necesitas navegar manualmente — Zustand + RootNavigator lo hacen)
-   *
-   * Pista:
-   * const onSubmit = async (values: LoginFormValues) => {
-   *   try {
-   *     await login(values);
-   *     // ✅ RootNavigator detecta isAuthenticated === true y cambia a AppNavigator
-   *   } catch {
-   *     Alert.alert('Error', 'Credenciales incorrectas');
-   *   }
-   * };
-   */
-  const onSubmit = async (_values: LoginFormValues) => {
-    // TODO: Implementar
-    Alert.alert('TODO', 'Implementa onSubmit en LoginScreen.tsx');
+  const onSubmit = async (values: LoginFormValues) => {
+    try {
+      await login(values);
+    } catch {
+      const message = useAuthStore.getState().error ?? 'Credenciales incorrectas';
+      Alert.alert('No se pudo iniciar sesión', message);
+    }
   };
 
   return (
@@ -65,6 +50,12 @@ export function LoginScreen({ navigation }: LoginScreenProps): React.JSX.Element
       <View style={styles.header}>
         <Text style={styles.title}>Bienvenido</Text>
         <Text style={styles.subtitle}>Ingresa tus credenciales para continuar</Text>
+      </View>
+
+      <View style={styles.demoBox}>
+        <Text style={styles.demoTitle}>Cuenta de demostración</Text>
+        <Text style={styles.demoText}>Usuario: emilys</Text>
+        <Text style={styles.demoText}>Contraseña: emilyspass</Text>
       </View>
 
       <View style={styles.form}>
@@ -148,6 +139,23 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: theme.fontSize.md,
     color: theme.colors.textSecondary,
+  },
+  demoBox: {
+    backgroundColor: theme.colors.surface,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.brand,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    gap: theme.spacing.xs,
+  },
+  demoTitle: {
+    color: theme.colors.brand,
+    fontWeight: '700',
+    fontSize: theme.fontSize.sm,
+  },
+  demoText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSize.sm,
   },
   form: {
     gap: theme.spacing.md,

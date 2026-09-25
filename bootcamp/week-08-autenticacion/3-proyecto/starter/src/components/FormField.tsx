@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  View,
+  Pressable,
+  StyleSheet,
   Text,
   TextInput,
-  StyleSheet,
+  View,
   type TextInputProps,
 } from 'react-native';
 import { theme } from '../theme';
@@ -13,29 +14,50 @@ interface FormFieldProps extends TextInputProps {
   error?: string;
 }
 
-export function FormField({ label, error, ...inputProps }: FormFieldProps): React.JSX.Element {
+export function FormField({
+  label,
+  error,
+  secureTextEntry = false,
+  ...inputProps
+}: FormFieldProps): React.JSX.Element {
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={[styles.input, error ? styles.inputError : null]}
-        placeholderTextColor={theme.colors.textMuted}
-        {...inputProps}
-      />
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={[
+            styles.input,
+            secureTextEntry && styles.inputWithAction,
+            error ? styles.inputError : null,
+          ]}
+          placeholderTextColor={theme.colors.textMuted}
+          secureTextEntry={secureTextEntry && !passwordVisible}
+          {...inputProps}
+        />
+        {secureTextEntry && (
+          <Pressable
+            style={styles.visibilityButton}
+            onPress={() => setPasswordVisible((visible) => !visible)}
+            accessibilityRole="button"
+            accessibilityLabel={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          >
+            <Text style={styles.visibilityText}>
+              {passwordVisible ? 'Ocultar' : 'Ver'}
+            </Text>
+          </Pressable>
+        )}
+      </View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 6,
-  },
-  label: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: '600',
-    color: theme.colors.textSecondary,
-  },
+  container: { gap: 6 },
+  label: { fontSize: theme.fontSize.sm, fontWeight: '600', color: theme.colors.textSecondary },
+  inputContainer: { position: 'relative', justifyContent: 'center' },
   input: {
     backgroundColor: theme.colors.background,
     borderRadius: theme.radius.md,
@@ -45,11 +67,14 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontSize: theme.fontSize.md,
   },
-  inputError: {
-    borderColor: theme.colors.danger,
+  inputWithAction: { paddingRight: 72 },
+  inputError: { borderColor: theme.colors.danger },
+  visibilityButton: {
+    position: 'absolute',
+    right: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
-  errorText: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.danger,
-  },
+  visibilityText: { color: theme.colors.brand, fontSize: theme.fontSize.sm, fontWeight: '700' },
+  errorText: { fontSize: theme.fontSize.xs, color: theme.colors.danger },
 });

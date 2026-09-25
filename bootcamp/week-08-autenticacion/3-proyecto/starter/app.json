@@ -1,28 +1,29 @@
 {
   "expo": {
-    "name": "bc-auth08",
-    "slug": "bc-auth08",
-    "version": "1.0.0",
+    "name": "Pizza Ruta",
+    "slug": "pizza-ruta-w8",
+    "version": "1.8.0",
     "orientation": "portrait",
-    "scheme": "bcauth08",
-    "icon": "./assets/icon.png",
+    "scheme": "pizzaruta",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#0f172a"
-    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "dev.bcreactnative.auth08"
+      "bundleIdentifier": "dev.ergrato.bootcamp.week08"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0f172a"
       },
-      "package": "dev.bcreactnative.auth08"
+      "package": "dev.ergrato.bootcamp.week08"
     },
-    "web": {
-      "bundler": "metro"
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6026deff-62fd-4c45-923f-1dfe4a0e18a3"
+      }
     }
   }
 }
