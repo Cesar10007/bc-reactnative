@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -11,9 +12,10 @@ import {
   type ListRenderItem,
 } from 'react-native';
 
-import { useItems } from '../hooks/useItems';
+import { useDeleteItem, useItems } from '../hooks/useItems';
 import { usePreferences } from '../hooks/usePreferences';
 import type { HomeScreenProps } from '../navigation/types';
+import { useSavedStore } from '../stores/savedStore';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 import type { Item } from '../types';
 
@@ -22,9 +24,10 @@ interface PizzaCardProps {
   compact: boolean;
   onDetail: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-function PizzaCard({ item, compact, onDetail, onEdit }: PizzaCardProps): React.JSX.Element {
+function PizzaCard({ item, compact, onDetail, onEdit, onDelete }: PizzaCardProps): React.JSX.Element {
   return (
     <Pressable style={({ pressed }) => [styles.card, compact && styles.cardCompact, pressed && styles.pressed]} onPress={onDetail}>
       <Image source={{ uri: item.image }} style={[styles.image, compact && styles.imageCompact]} />
@@ -34,9 +37,14 @@ function PizzaCard({ item, compact, onDetail, onEdit }: PizzaCardProps): React.J
         {!compact && <Text style={styles.description} numberOfLines={2}>{item.description}</Text>}
         <View style={styles.cardFooter}>
           <Text style={styles.price}>${item.price.toLocaleString('es-CO')}</Text>
-          <Pressable style={styles.editButton} onPress={onEdit} hitSlop={8}>
-            <Text style={styles.editText}>Editar</Text>
-          </Pressable>
+          <View style={styles.cardActions}>
+            <Pressable style={styles.editButton} onPress={onEdit} hitSlop={8}>
+              <Text style={styles.editText}>Editar</Text>
+            </Pressable>
+            <Pressable style={styles.deleteButton} onPress={onDelete} hitSlop={8}>
+              <Text style={styles.deleteText}>Eliminar</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </Pressable>
@@ -46,9 +54,11 @@ function PizzaCard({ item, compact, onDetail, onEdit }: PizzaCardProps): React.J
 export function HomeScreen({ navigation }: HomeScreenProps): React.JSX.Element {
   const [query, setQuery] = useState('');
   const { data, isLoading, isError, error, refetch, isFetching } = useItems();
+  const { mutate: deleteItem } = useDeleteItem();
+  const removeFavorite = useSavedStore((state) => state.removeItem);
   const { sortOrder, compactMode, itemsPerPage } = usePreferences();
 
-  const visibleItems = useMemo(() => {
+  const catalog = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('es');
     const filtered = (data?.items ?? []).filter((item) =>
       !normalized || `${item.name} ${item.flavor}`.toLocaleLowerCase('es').includes(normalized),
@@ -65,8 +75,30 @@ export function HomeScreen({ navigation }: HomeScreenProps): React.JSX.Element {
         ? a.name.localeCompare(b.name, 'es')
         : b.name.localeCompare(a.name, 'es');
     });
-    return filtered.slice(0, itemsPerPage);
+    return {
+      visibleItems: filtered.slice(0, itemsPerPage),
+      filteredCount: filtered.length,
+      totalCount: data?.items.length ?? 0,
+    };
   }, [data?.items, itemsPerPage, query, sortOrder]);
+
+  const confirmDelete = useCallback((item: Item) => {
+    Alert.alert(
+      'Eliminar pizza',
+      `¿Quieres eliminar “${item.name}” del catálogo?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            removeFavorite(item.id);
+            deleteItem(item.id);
+          },
+        },
+      ],
+    );
+  }, [deleteItem, removeFavorite]);
 
   const renderItem: ListRenderItem<Item> = useCallback(({ item }) => (
     <PizzaCard
@@ -74,8 +106,9 @@ export function HomeScreen({ navigation }: HomeScreenProps): React.JSX.Element {
       compact={compactMode}
       onDetail={() => navigation.navigate('Detail', item)}
       onEdit={() => navigation.navigate('Edit', { id: item.id, name: item.name })}
+      onDelete={() => confirmDelete(item)}
     />
-  ), [compactMode, navigation]);
+  ), [compactMode, confirmDelete, navigation]);
 
   if (isLoading) {
     return <View style={styles.centered}><ActivityIndicator size="large" color={COLORS.accent} /><Text style={styles.muted}>Cargando pizzas...</Text></View>;
@@ -102,14 +135,21 @@ export function HomeScreen({ navigation }: HomeScreenProps): React.JSX.Element {
         <TextInput style={styles.search} value={query} onChangeText={setQuery} placeholder="Buscar por pizza o sabor..." placeholderTextColor={COLORS.textMuted} />
       </View>
       <FlatList
-        data={visibleItems}
+        data={catalog.visibleItems}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
         ItemSeparatorComponent={() => <View style={{ height: SPACING.sm }} />}
         onRefresh={() => void refetch()}
         refreshing={isFetching && !isLoading}
-        ListHeaderComponent={<Text style={styles.count}>{visibleItems.length} pizzas · {sortOrder === 'asc' ? 'A → Z' : 'Z → A'}{compactMode ? ' · Compacto' : ''}</Text>}
+        ListHeaderComponent={
+          <Text style={styles.count}>
+            Mostrando {catalog.visibleItems.length} de {catalog.filteredCount}
+            {query.trim() ? ` · ${catalog.totalCount} en total` : ''}
+            {' · '}{sortOrder === 'asc' ? 'A → Z' : 'Z → A'}
+            {compactMode ? ' · Compacto' : ''}
+          </Text>
+        }
         ListEmptyComponent={<Text style={styles.empty}>No encontramos pizzas con esa búsqueda.</Text>}
       />
     </View>
@@ -137,8 +177,11 @@ const styles = StyleSheet.create({
   description: { ...TYPOGRAPHY.caption, color: COLORS.textSecondary },
   cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: SPACING.xs },
   price: { ...TYPOGRAPHY.body, color: COLORS.accent, fontWeight: '700' },
+  cardActions: { flexDirection: 'row', gap: SPACING.xs },
   editButton: { borderWidth: 1, borderColor: COLORS.accent, borderRadius: RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 4 },
   editText: { ...TYPOGRAPHY.caption, color: COLORS.accent, fontWeight: '700' },
+  deleteButton: { borderWidth: 1, borderColor: COLORS.error, borderRadius: RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 4 },
+  deleteText: { ...TYPOGRAPHY.caption, color: COLORS.error, fontWeight: '700' },
   offline: { backgroundColor: '#78350f', padding: SPACING.sm },
   offlineText: { ...TYPOGRAPHY.caption, color: '#fbbf24', textAlign: 'center' },
   error: { ...TYPOGRAPHY.h3, color: COLORS.error, textAlign: 'center' },

@@ -1,4 +1,10 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Item } from '../types';
+
+export type RootTabParamList = {
+  Catalog: undefined;
+  Favorites: undefined;
+};
 
 export type RootStackParamList = {
   Home: undefined;
@@ -8,7 +14,4 @@ export type RootStackParamList = {
   Settings: undefined;
 };
 
-export type HomeScreenProps = import('@react-navigation/native-stack').NativeStackScreenProps<
-  RootStackParamList,
-  'Home'
->;
+export type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
