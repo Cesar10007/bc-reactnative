@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { useItemById } from '../hooks/useItems';
 import type { RootStackParamList } from '../navigation/types';
 import { useSavedStore } from '../stores/savedStore';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
@@ -9,10 +10,16 @@ import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>;
 
 export function DetailScreen({ route, navigation }: Props): React.JSX.Element {
-  const item = route.params;
+  const routeItem = route.params;
+  const { data: currentItem } = useItemById(routeItem.id);
+  const item = currentItem ?? routeItem;
   const isSaved = useSavedStore((state) => state.isItemSaved(item.id));
   const addItem = useSavedStore((state) => state.addItem);
   const removeItem = useSavedStore((state) => state.removeItem);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: item.name });
+  }, [item.name, navigation]);
 
   function toggleFavorite(): void {
     if (isSaved) removeItem(item.id);
