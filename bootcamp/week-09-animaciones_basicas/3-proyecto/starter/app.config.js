@@ -1,3 +1,5 @@
+const { expo: staticConfig } = require('./app.json');
+
 module.exports = {
   expo: {
     name: 'Pizza Ruta',
@@ -18,5 +20,8 @@ module.exports = {
       package: 'dev.ergrato.bootcamp.week09',
     },
     plugins: ['expo-secure-store'],
+    // EAS agrega projectId en app.json; lo conservamos sin recuperar plugins antiguos.
+    extra: staticConfig.extra,
+    owner: staticConfig.owner,
   },
 };
