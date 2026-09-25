@@ -139,7 +139,7 @@ export function HomeScreen({ navigation }: HomeScreenProps): React.JSX.Element {
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ItemSeparatorComponent={() => <View style={{ height: SPACING.sm }} />}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
         onRefresh={() => void refetch()}
         refreshing={isFetching && !isLoading}
         ListHeaderComponent={
@@ -166,6 +166,7 @@ const styles = StyleSheet.create({
   search: { backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, padding: SPACING.md, ...TYPOGRAPHY.body },
   list: { padding: SPACING.md, paddingTop: 0, paddingBottom: SPACING.xxl, flexGrow: 1 },
   count: { ...TYPOGRAPHY.label, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: SPACING.sm },
+  separator: { height: SPACING.sm },
   card: { backgroundColor: COLORS.card, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden' },
   cardCompact: { flexDirection: 'row' },
   pressed: { opacity: 0.75 },

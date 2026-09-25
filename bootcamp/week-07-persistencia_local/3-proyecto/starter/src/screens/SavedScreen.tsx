@@ -19,7 +19,7 @@ export function SavedScreen({ navigation }: Props): React.JSX.Element {
         data={items}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.list}
-        ItemSeparatorComponent={() => <View style={{ height: SPACING.sm }} />}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={items.length ? (
           <View style={styles.header}>
             <Text style={styles.count}>{items.length} favorita{items.length === 1 ? '' : 's'}</Text>
@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   list: { padding: SPACING.md, paddingBottom: SPACING.xl, flexGrow: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SPACING.md },
+  separator: { height: SPACING.sm },
   count: { ...TYPOGRAPHY.label, textTransform: 'uppercase' },
   clear: { ...TYPOGRAPHY.caption, color: COLORS.error },
   card: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, padding: SPACING.md, backgroundColor: COLORS.card, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border },
