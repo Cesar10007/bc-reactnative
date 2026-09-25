@@ -1,12 +1,14 @@
-// src/navigation/RootNavigator.tsx
 import React from 'react';
-import { Pressable, Text } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { HomeScreen } from '../screens/HomeScreen';
+
 import { CreateScreen } from '../screens/CreateScreen';
+import { DetailScreen } from '../screens/DetailScreen';
+import { EditScreen } from '../screens/EditScreen';
+import { HomeScreen } from '../screens/HomeScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
-import type { RootStackParamList } from './types';
 import { COLORS } from '../theme';
+import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -14,45 +16,42 @@ export function RootNavigator(): React.JSX.Element {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: COLORS.surface },
-        headerTintColor: COLORS.text,
-        headerTitleStyle: { fontWeight: '700' },
-        contentStyle: { backgroundColor: COLORS.background },
+        headerStyle: styles.header,
+        headerTitleStyle: styles.headerTitle,
+        headerTintColor: COLORS.accent,
+        contentStyle: styles.content,
       }}
     >
       <Stack.Screen
         name="Home"
         component={HomeScreen}
         options={({ navigation }) => ({
-          title: 'Ítems',
-          headerRight: () => (
-            <Pressable
-              onPress={() => navigation.navigate('Create')}
-              style={{ marginRight: 4 }}
-            >
-              <Text style={{ color: COLORS.accent, fontSize: 28, lineHeight: 32 }}>+</Text>
+          title: 'Pizza Ruta',
+          headerLeft: () => (
+            <Pressable onPress={() => navigation.navigate('Settings')} style={styles.headerButton}>
+              <Text style={styles.settingsText}>⚙️</Text>
             </Pressable>
           ),
-          headerLeft: () => (
-            <Pressable
-              onPress={() => navigation.navigate('Settings')}
-              style={{ marginLeft: 4, marginRight: 12 }}
-            >
-              <Text style={{ color: COLORS.accent, fontSize: 20 }}>⚙️</Text>
+          headerRight: () => (
+            <Pressable onPress={() => navigation.navigate('Create')} style={styles.headerButton}>
+              <Text style={styles.createText}>+</Text>
             </Pressable>
           ),
         })}
       />
-      <Stack.Screen
-        name="Create"
-        component={CreateScreen}
-        options={{ title: 'Crear ítem', presentation: 'modal' }}
-      />
-      <Stack.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{ title: 'Ajustes' }}
-      />
+      <Stack.Screen name="Detail" component={DetailScreen} options={({ route }) => ({ title: route.params.name })} />
+      <Stack.Screen name="Create" component={CreateScreen} options={{ title: 'Nueva pizza', presentation: 'modal' }} />
+      <Stack.Screen name="Edit" component={EditScreen} options={({ route }) => ({ title: `Editar ${route.params.name}` })} />
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Ajustes' }} />
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  header: { backgroundColor: COLORS.surface },
+  headerTitle: { color: COLORS.textPrimary, fontWeight: '700' },
+  content: { backgroundColor: COLORS.background },
+  headerButton: { paddingHorizontal: 8, paddingVertical: 2 },
+  settingsText: { fontSize: 20 },
+  createText: { color: COLORS.accent, fontSize: 28, fontWeight: '300' },
+});

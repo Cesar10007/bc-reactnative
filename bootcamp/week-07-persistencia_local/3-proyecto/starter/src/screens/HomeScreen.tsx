@@ -1,11 +1,14 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
+  type ListRenderItem,
 } from 'react-native';
 
 import { useItems } from '../hooks/useItems';
@@ -14,218 +17,123 @@ import type { HomeScreenProps } from '../navigation/types';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 import type { Item } from '../types';
 
-interface ItemRowProps {
+interface PizzaCardProps {
   item: Item;
   compact: boolean;
+  onDetail: () => void;
+  onEdit: () => void;
 }
 
-function ItemRow({ item, compact }: ItemRowProps): React.JSX.Element {
+function PizzaCard({ item, compact, onDetail, onEdit }: PizzaCardProps): React.JSX.Element {
   return (
-    <View style={[styles.row, compact && styles.rowCompact]}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{String(item.id)}</Text>
+    <Pressable style={({ pressed }) => [styles.card, compact && styles.cardCompact, pressed && styles.pressed]} onPress={onDetail}>
+      <Image source={{ uri: item.image }} style={[styles.image, compact && styles.imageCompact]} />
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle} numberOfLines={1}>{item.name}</Text>
+        <Text style={styles.cardSubtitle} numberOfLines={1}>{item.flavor} · Masa {item.doughType}</Text>
+        {!compact && <Text style={styles.description} numberOfLines={2}>{item.description}</Text>}
+        <View style={styles.cardFooter}>
+          <Text style={styles.price}>${item.price.toLocaleString('es-CO')}</Text>
+          <Pressable style={styles.editButton} onPress={onEdit} hitSlop={8}>
+            <Text style={styles.editText}>Editar</Text>
+          </Pressable>
+        </View>
       </View>
-
-      <View style={styles.rowContent}>
-        <Text style={styles.rowTitle} numberOfLines={compact ? 1 : 2}>
-          {item.title}
-        </Text>
-
-        {!compact && (
-          <Text style={styles.rowBody} numberOfLines={2}>
-            {item.body}
-          </Text>
-        )}
-      </View>
-    </View>
+    </Pressable>
   );
 }
 
-export function HomeScreen({
-  navigation: _navigation,
-}: HomeScreenProps): React.JSX.Element {
-  const { data, isLoading, isError, refetch, isFetching } = useItems();
+export function HomeScreen({ navigation }: HomeScreenProps): React.JSX.Element {
+  const [query, setQuery] = useState('');
+  const { data, isLoading, isError, error, refetch, isFetching } = useItems();
+  const { sortOrder, compactMode, itemsPerPage } = usePreferences();
 
-  const {
-    sortOrder,
-    compactMode,
-    itemsPerPage,
-  } = usePreferences();
-
-  const sortedItems = useMemo(() => {
-    if (!data?.items) {
-      return [];
-    }
-
-    return [...data.items].sort((firstItem, secondItem) =>
-      sortOrder === 'asc'
-        ? firstItem.title.localeCompare(secondItem.title)
-        : secondItem.title.localeCompare(firstItem.title),
+  const visibleItems = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase('es');
+    const filtered = (data?.items ?? []).filter((item) =>
+      !normalized || `${item.name} ${item.flavor}`.toLocaleLowerCase('es').includes(normalized),
     );
-  }, [data?.items, sortOrder]);
+    filtered.sort((a, b) =>
+      sortOrder === 'asc' ? a.name.localeCompare(b.name, 'es') : b.name.localeCompare(a.name, 'es'),
+    );
+    return filtered.slice(0, itemsPerPage);
+  }, [data?.items, itemsPerPage, query, sortOrder]);
 
-  const visibleItems = useMemo(
-    () => sortedItems.slice(0, itemsPerPage),
-    [itemsPerPage, sortedItems],
-  );
-
-  const renderItem = useCallback(
-    ({ item }: { item: Item }) => (
-      <ItemRow item={item} compact={compactMode} />
-    ),
-    [compactMode],
-  );
+  const renderItem: ListRenderItem<Item> = useCallback(({ item }) => (
+    <PizzaCard
+      item={item}
+      compact={compactMode}
+      onDetail={() => navigation.navigate('Detail', item)}
+      onEdit={() => navigation.navigate('Edit', { id: item.id, name: item.name })}
+    />
+  ), [compactMode, navigation]);
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.accent} />
-        <Text style={styles.loadingText}>Cargando ítems...</Text>
-      </View>
-    );
+    return <View style={styles.centered}><ActivityIndicator size="large" color={COLORS.accent} /><Text style={styles.muted}>Cargando pizzas...</Text></View>;
   }
 
   if (isError && !data) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>
-          No hay conexión y no hay caché disponible
-        </Text>
-
-        <Pressable style={styles.retryBtn} onPress={() => void refetch()}>
-          <Text style={styles.retryText}>Reintentar</Text>
-        </Pressable>
+        <Text style={styles.error}>No se pudieron cargar las pizzas</Text>
+        <Text style={styles.muted}>{error instanceof Error ? error.message : 'Sin conexión y sin caché'}</Text>
+        <Pressable style={styles.retry} onPress={() => void refetch()}><Text style={styles.retryText}>Reintentar</Text></Pressable>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {data?.source === 'cache' && (
-        <View style={styles.offlineBanner}>
-          <Text style={styles.offlineText}>
-            ⚠️ Sin red — mostrando datos guardados localmente
-          </Text>
-        </View>
-      )}
-
+      {data?.source === 'cache' && <View style={styles.offline}><Text style={styles.offlineText}>⚠️ Sin red — catálogo guardado en el dispositivo</Text></View>}
+      <View style={styles.hero}>
+        <Text style={styles.title}>Pizza Ruta</Text>
+        <Text style={styles.muted}>Pizzas artesanales con delivery</Text>
+      </View>
+      <View style={styles.searchWrap}>
+        <TextInput style={styles.search} value={query} onChangeText={setQuery} placeholder="Buscar por pizza o sabor..." placeholderTextColor={COLORS.textMuted} />
+      </View>
       <FlatList
         data={visibleItems}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={() => <View style={{ height: SPACING.sm }} />}
         onRefresh={() => void refetch()}
         refreshing={isFetching && !isLoading}
-        ListHeaderComponent={
-          <View style={styles.listHeader}>
-            <Text style={styles.listHeaderText}>
-              Mostrando {visibleItems.length} de {sortedItems.length} ítems ·{' '}
-              Orden: {sortOrder === 'asc' ? 'A → Z' : 'Z → A'}
-              {compactMode ? ' · Compacto' : ''}
-            </Text>
-          </View>
-        }
-        ListEmptyComponent={
-          <View style={styles.centered}>
-            <Text style={styles.emptyText}>No hay ítems</Text>
-          </View>
-        }
+        ListHeaderComponent={<Text style={styles.count}>{visibleItems.length} pizzas · {sortOrder === 'asc' ? 'A → Z' : 'Z → A'}{compactMode ? ' · Compacto' : ''}</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>No encontramos pizzas con esa búsqueda.</Text>}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: SPACING.md,
-    padding: SPACING.lg,
-  },
-  loadingText: {
-    ...TYPOGRAPHY.caption,
-  },
-  list: {
-    paddingVertical: SPACING.sm,
-    flexGrow: 1,
-  },
-  listHeader: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-  },
-  listHeaderText: {
-    ...TYPOGRAPHY.caption,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: COLORS.border,
-    marginHorizontal: SPACING.md,
-  },
-  offlineBanner: {
-    backgroundColor: '#78350f',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-  },
-  offlineText: {
-    ...TYPOGRAPHY.caption,
-    color: '#fbbf24',
-  },
-  errorText: {
-    ...TYPOGRAPHY.body,
-    textAlign: 'center',
-  },
-  retryBtn: {
-    backgroundColor: COLORS.accent,
-    borderRadius: RADIUS.sm,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-  },
-  retryText: {
-    ...TYPOGRAPHY.body,
-    color: '#fff',
-    fontWeight: '700',
-  },
-  emptyText: {
-    ...TYPOGRAPHY.body,
-  },
-  row: {
-    flexDirection: 'row',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    alignItems: 'flex-start',
-    gap: SPACING.sm,
-  },
-  rowCompact: {
-    paddingVertical: SPACING.sm,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  rowContent: {
-    flex: 1,
-    gap: 2,
-  },
-  rowTitle: {
-    ...TYPOGRAPHY.body,
-    fontWeight: '600',
-  },
-  rowBody: {
-    ...TYPOGRAPHY.caption,
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACING.md, padding: SPACING.lg, backgroundColor: COLORS.background },
+  hero: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: SPACING.md },
+  title: { ...TYPOGRAPHY.h1 },
+  muted: { ...TYPOGRAPHY.caption, textAlign: 'center' },
+  searchWrap: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.md },
+  search: { backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, padding: SPACING.md, ...TYPOGRAPHY.body },
+  list: { padding: SPACING.md, paddingTop: 0, paddingBottom: SPACING.xxl, flexGrow: 1 },
+  count: { ...TYPOGRAPHY.label, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: SPACING.sm },
+  card: { backgroundColor: COLORS.card, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden' },
+  cardCompact: { flexDirection: 'row' },
+  pressed: { opacity: 0.75 },
+  image: { width: '100%', height: 160 },
+  imageCompact: { width: 88, height: 104 },
+  cardContent: { flex: 1, padding: SPACING.md, gap: SPACING.xs },
+  cardTitle: { ...TYPOGRAPHY.body, fontWeight: '700' },
+  cardSubtitle: { ...TYPOGRAPHY.caption },
+  description: { ...TYPOGRAPHY.caption, color: COLORS.textSecondary },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: SPACING.xs },
+  price: { ...TYPOGRAPHY.body, color: COLORS.accent, fontWeight: '700' },
+  editButton: { borderWidth: 1, borderColor: COLORS.accent, borderRadius: RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 4 },
+  editText: { ...TYPOGRAPHY.caption, color: COLORS.accent, fontWeight: '700' },
+  offline: { backgroundColor: '#78350f', padding: SPACING.sm },
+  offlineText: { ...TYPOGRAPHY.caption, color: '#fbbf24', textAlign: 'center' },
+  error: { ...TYPOGRAPHY.h3, color: COLORS.error, textAlign: 'center' },
+  retry: { backgroundColor: COLORS.accent, borderRadius: RADIUS.sm, paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm },
+  retryText: { ...TYPOGRAPHY.body, color: COLORS.background, fontWeight: '700' },
+  empty: { ...TYPOGRAPHY.body, color: COLORS.textSecondary, textAlign: 'center', marginTop: SPACING.xl },
 });
