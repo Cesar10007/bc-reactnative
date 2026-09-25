@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -55,6 +56,9 @@ export function CreateScreen(): React.JSX.Element {
       },
       {
         onSuccess: () => navigation.goBack(),
+        onError: () => {
+          Alert.alert('No se pudo crear', 'Revisa los datos e inténtalo nuevamente.');
+        },
       },
     );
   };

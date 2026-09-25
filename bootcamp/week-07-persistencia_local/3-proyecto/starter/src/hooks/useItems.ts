@@ -104,17 +104,35 @@ export function useCreateItem() {
   const queryClient = useQueryClient();
   return useMutation<Item, Error, CreateItemPayload>({
     mutationFn: async (payload) => {
-      await apiClient.post('/posts', { title: payload.name, body: payload.description });
+      // JSONPlaceholder es una API de práctica: acepta el POST, pero no conserva
+      // los cambios. El ID local evita duplicados y permite crear también offline.
+      try {
+        await apiClient.post('/posts', {
+          title: payload.name,
+          body: payload.description,
+        });
+      } catch {
+        if (__DEV__) {
+          console.warn('Sin conexión: la pizza se guardará localmente.');
+        }
+      }
+
       return { ...payload, id: createLocalId() };
     },
-    onSuccess: async (newItem) => {
+    onSuccess: (newItem) => {
       const current = queryClient.getQueryData<ItemsWithSource>(ITEMS_QUERY_KEY);
       const items = [newItem, ...(current?.items ?? [])];
+
+      // Actualizar primero la interfaz; la escritura en disco no debe bloquear
+      // la navegación ni hacer que un formulario válido parezca fallar.
       queryClient.setQueryData<ItemsWithSource>(ITEMS_QUERY_KEY, {
         items,
         source: current?.source ?? 'network',
       });
-      await saveCache(items);
+
+      void saveCache(items).catch((error: unknown) => {
+        console.error('No se pudo actualizar la caché de pizzas:', error);
+      });
     },
   });
 }
