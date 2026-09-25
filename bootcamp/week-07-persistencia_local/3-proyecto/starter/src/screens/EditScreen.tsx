@@ -22,6 +22,7 @@ import { FormField } from '../components/FormField';
 import { FormSelectField } from '../components/FormSelectField';
 import { itemSchema, type ItemFormData } from '../schemas/itemSchema';
 import { useItemById, useUpdateItem } from '../hooks/useItems';
+import { useSavedStore } from '../stores/savedStore';
 
 type EditNavProp = NativeStackNavigationProp<RootStackParamList, 'Edit'>;
 type EditRouteProp = RouteProp<RootStackParamList, 'Edit'>;
@@ -62,6 +63,7 @@ export function EditScreen(): React.JSX.Element {
   }, [item, reset]);
 
   const { mutate: updateItem, isPending } = useUpdateItem();
+  const updateFavorite = useSavedStore((state) => state.updateItem);
 
   const onSubmit: SubmitHandler<ItemFormData> = (data) => {
     updateItem(
@@ -75,7 +77,10 @@ export function EditScreen(): React.JSX.Element {
         image: item?.image ?? 'https://picsum.photos/id/292/300/200',
       },
       {
-        onSuccess: () => navigation.goBack(),
+        onSuccess: (updatedItem) => {
+          updateFavorite(updatedItem);
+          navigation.goBack();
+        },
       },
     );
   };

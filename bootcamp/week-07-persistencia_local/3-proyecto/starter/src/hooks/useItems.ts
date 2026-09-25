@@ -13,6 +13,7 @@ export const ITEMS_QUERY_KEY = ['pizzas'] as const;
 export const PIZZAS_CACHE_KEY = '@pizza_ruta/pizzas_cache';
 const LOCAL_PIZZAS_KEY = '@pizza_ruta/local_pizzas';
 const DELETED_PIZZA_IDS_KEY = '@pizza_ruta/deleted_pizza_ids';
+const EDITED_PIZZAS_KEY = '@pizza_ruta/edited_pizzas';
 
 interface RemotePost {
   id: number;
@@ -68,6 +69,7 @@ export async function clearPizzaRutaLocalData(): Promise<void> {
     PIZZAS_CACHE_KEY,
     LOCAL_PIZZAS_KEY,
     DELETED_PIZZA_IDS_KEY,
+    EDITED_PIZZAS_KEY,
     '@pizza_ruta/last_sync',
   ]);
 }
@@ -90,18 +92,34 @@ async function saveDeletedPizzaIds(ids: string[]): Promise<void> {
   await AsyncStorage.setItem(DELETED_PIZZA_IDS_KEY, JSON.stringify(ids));
 }
 
+async function getEditedPizzas(): Promise<Item[]> {
+  const value = await AsyncStorage.getItem(EDITED_PIZZAS_KEY);
+  return value ? (JSON.parse(value) as Item[]) : [];
+}
+
+async function saveEditedPizzas(items: Item[]): Promise<void> {
+  await AsyncStorage.setItem(EDITED_PIZZAS_KEY, JSON.stringify(items));
+}
+
 export function useItems() {
   return useQuery<ItemsWithSource>({
     queryKey: ITEMS_QUERY_KEY,
     queryFn: async () => {
       try {
-        const [{ data }, localPizzas, deletedIds] = await Promise.all([
+        const [{ data }, localPizzas, deletedIds, editedPizzas] = await Promise.all([
           apiClient.get<RemotePost[]>('/posts?_limit=15'),
           getLocalPizzas(),
           getDeletedPizzaIds(),
+          getEditedPizzas(),
         ]);
         const deleted = new Set(deletedIds);
-        const items = [...localPizzas, ...data.map(mapRemotePost)].filter(
+        const editsById = new Map(
+          editedPizzas.map((item) => [String(item.id), item]),
+        );
+        const remotePizzas = data.map(mapRemotePost).map(
+          (item) => editsById.get(String(item.id)) ?? item,
+        );
+        const items = [...localPizzas, ...remotePizzas].filter(
           (item) => !deleted.has(String(item.id)),
         );
         await saveCache(items);
@@ -221,11 +239,13 @@ export function useUpdateItem() {
   const queryClient = useQueryClient();
   return useMutation<Item, Error, UpdateItemPayload>({
     mutationFn: async (payload) => {
+      // JSONPlaceholder no conserva el PUT. Aplicamos la edición localmente y
+      // enviamos la petición en segundo plano para seguir demostrando la API.
       if (!String(payload.id).startsWith('local-')) {
-        await apiClient.put(`/posts/${payload.id}`, {
+        void apiClient.put(`/posts/${payload.id}`, {
           title: payload.name,
           body: payload.description,
-        });
+        }).catch(() => undefined);
       }
       return payload;
     },
@@ -242,7 +262,20 @@ export function useUpdateItem() {
       const localPizzas = items.filter((item) =>
         String(item.id).startsWith('local-'),
       );
-      await Promise.all([saveCache(items), saveLocalPizzas(localPizzas)]);
+      const existingEdits = await getEditedPizzas();
+      const editedPizzas = String(updatedItem.id).startsWith('local-')
+        ? existingEdits
+        : [
+            updatedItem,
+            ...existingEdits.filter(
+              (item) => String(item.id) !== String(updatedItem.id),
+            ),
+          ];
+      await Promise.all([
+        saveCache(items),
+        saveLocalPizzas(localPizzas),
+        saveEditedPizzas(editedPizzas),
+      ]);
     },
   });
 }

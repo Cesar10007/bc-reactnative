@@ -1,8 +1,9 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Item } from '../types';
 
 export type RootTabParamList = {
-  Catalog: undefined;
+  Catalog: NavigatorScreenParams<RootStackParamList>;
   Favorites: undefined;
 };
 
