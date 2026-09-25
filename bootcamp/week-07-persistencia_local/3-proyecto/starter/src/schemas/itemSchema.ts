@@ -1,23 +1,39 @@
-// src/schemas/itemSchema.ts
-// Schema Zod para validar el formulario de creación/edición.
-// TODO: adaptar los campos a tu dominio asignado.
-
 import { z } from 'zod';
 
 export const itemSchema = z.object({
-  title: z
-    .string({ error: 'El nombre es requerido' })
-    .min(1, 'El nombre no puede estar vacío')
-    .max(80, 'Máximo 80 caracteres'),
-  body: z
+  name: z
     .string()
-    .max(500, 'Máximo 500 caracteres')
+    .trim()
+    .min(3, 'El nombre debe tener al menos 3 caracteres')
+    .max(80, 'El nombre no puede superar 80 caracteres'),
+
+  description: z
+    .string()
+    .trim()
+    .max(500, 'La descripción no puede superar 500 caracteres')
     .optional()
     .or(z.literal('')),
-  // TODO: agrega campos de tu dominio
-  // Ejemplo (Farmacia): price: z.coerce.number().positive('Precio inválido')
-  // Ejemplo (Gimnasio): capacity: z.coerce.number().int().min(1)
+
+  price: z
+    .string()
+    .trim()
+    .min(1, 'El precio es requerido')
+    .refine((value) => !Number.isNaN(Number(value)), 'El precio debe ser un número válido')
+    .refine((value) => Number(value) > 0, 'El precio debe ser mayor que 0')
+    .refine(
+      (value) => Number(value) <= 200000,
+      'El precio no puede superar $200.000',
+    ),
+
+  flavor: z
+    .string()
+    .trim()
+    .min(3, 'El sabor debe tener al menos 3 caracteres')
+    .max(60, 'El sabor no puede superar 60 caracteres'),
+
+  doughType: z.enum(['delgada', 'gruesa'], {
+    error: 'Selecciona masa delgada o gruesa',
+  }),
 });
 
-// El tipo se infiere del schema — no duplicar con interface manual
 export type ItemFormData = z.infer<typeof itemSchema>;

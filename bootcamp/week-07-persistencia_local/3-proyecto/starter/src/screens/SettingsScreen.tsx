@@ -7,15 +7,16 @@ import {
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
+import { clearPizzaRutaLocalData } from '../hooks/useItems';
 import { usePreferences } from '../hooks/usePreferences';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 
-const SENSITIVE_KEY = 'demo_sensitive_value';
-const MOCK_SENSITIVE = 'SuPeRsEcReT-2025';
+const SENSITIVE_KEY = 'pizza_ruta/delivery_pin';
 
 export function SettingsScreen(): React.JSX.Element {
   const {
@@ -27,12 +28,19 @@ export function SettingsScreen(): React.JSX.Element {
     setItemsPerPage,
   } = usePreferences();
 
+  const [deliveryPin, setDeliveryPin] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [maskedValue, setMaskedValue] = useState<string | null>(null);
 
   async function handleSaveSensitive(): Promise<void> {
+    if (!/^\d{4,6}$/.test(deliveryPin)) {
+      Alert.alert('PIN inválido', 'Escribe un PIN de entrega de 4 a 6 números.');
+      return;
+    }
+
     try {
-      await SecureStore.setItemAsync(SENSITIVE_KEY, MOCK_SENSITIVE);
+      await SecureStore.setItemAsync(SENSITIVE_KEY, deliveryPin);
+      setDeliveryPin('');
 
       setIsSaved(true);
       setMaskedValue(null);
@@ -77,6 +85,15 @@ export function SettingsScreen(): React.JSX.Element {
     }
   }
 
+  async function handleClearCache(): Promise<void> {
+    try {
+      await clearPizzaRutaLocalData();
+      Alert.alert('Caché eliminada', 'El catálogo offline y los datos de sincronización fueron eliminados.');
+    } catch {
+      Alert.alert('Error', 'No fue posible limpiar la caché.');
+    }
+  }
+
   async function handleDeleteSensitive(): Promise<void> {
     try {
       await SecureStore.deleteItemAsync(SENSITIVE_KEY);
@@ -112,7 +129,7 @@ export function SettingsScreen(): React.JSX.Element {
           <Text style={styles.rowLabel}>Modo compacto</Text>
 
           <Text style={styles.rowDesc}>
-            Muestra menos información por ítem en la lista
+            Muestra una tarjeta reducida por pizza
           </Text>
         </View>
 
@@ -158,7 +175,7 @@ export function SettingsScreen(): React.JSX.Element {
       </View>
 
       <View style={[styles.row, styles.rowColumn]}>
-        <Text style={styles.rowLabel}>Ítems por página</Text>
+        <Text style={styles.rowLabel}>Pizzas por página</Text>
 
         <View style={styles.segmented}>
           {([5, 10, 20] as const).map((amount) => (
@@ -196,9 +213,16 @@ export function SettingsScreen(): React.JSX.Element {
         valor completo.
       </Text>
 
-      <Text style={styles.rowDesc}>
-        Dato de ejemplo: <Text style={styles.mono}>{SENSITIVE_KEY}</Text>
-      </Text>
+      <TextInput
+        style={styles.secureInput}
+        value={deliveryPin}
+        onChangeText={setDeliveryPin}
+        placeholder="PIN de entrega (4 a 6 números)"
+        placeholderTextColor={COLORS.textMuted}
+        keyboardType="number-pad"
+        secureTextEntry
+        maxLength={6}
+      />
 
       {isSaved && (
         <Text style={styles.savedStatus}>Dato sensible guardado.</Text>
@@ -238,10 +262,17 @@ export function SettingsScreen(): React.JSX.Element {
 
       <View style={styles.infoBox}>
         <Text style={styles.infoText}>
-          Tip: en una aplicación real guardarías aquí un token JWT, PIN,
-          credencial o clave de cifrado; no deben ir en AsyncStorage.
+          El PIN se guarda cifrado en SecureStore y nunca en AsyncStorage o MMKV.
         </Text>
       </View>
+
+      <Text style={[styles.sectionTitle, { marginTop: SPACING.xl }]}>Caché offline</Text>
+      <Text style={styles.sectionHint}>
+        El catálogo se guarda con AsyncStorage para poder consultarlo sin conexión.
+      </Text>
+      <Pressable style={[styles.btnSecure, styles.btnDanger]} onPress={handleClearCache}>
+        <Text style={[styles.btnSecureText, { color: '#ef4444' }]}>Limpiar catálogo guardado</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -314,6 +345,14 @@ const styles = StyleSheet.create({
   segmentTextActive: {
     color: COLORS.background,
     fontWeight: '700',
+  },
+  secureInput: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.sm,
+    padding: SPACING.md,
+    ...TYPOGRAPHY.body,
   },
   savedStatus: {
     ...TYPOGRAPHY.caption,
