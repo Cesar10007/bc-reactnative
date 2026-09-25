@@ -1,8 +1,7 @@
 // src/storage/mmkv.ts
 // Instancia global de MMKV para toda la app.
-// Importa `storage` desde aquí en cualquier hook o pantalla.
-// ⚠️  Requiere build nativo — no funciona con Expo Go.
+// Requiere un development build nativo; no funciona en Expo Go.
 
-import { MMKV } from 'react-native-mmkv';
+import { createMMKV } from 'react-native-mmkv';
 
-export const storage = new MMKV({ id: 'app-storage' });
+export const storage = createMMKV({ id: 'app-storage' });
