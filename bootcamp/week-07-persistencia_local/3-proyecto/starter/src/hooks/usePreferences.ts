@@ -1,57 +1,40 @@
-import { useEffect, useState } from 'react'
-import { storage } from '../storage/mmkv'
+import {
+  useMMKVBoolean,
+  useMMKVNumber,
+  useMMKVString,
+} from 'react-native-mmkv';
 
-const SORT_ORDER_KEY = 'sortOrder'
-const COMPACT_MODE_KEY = 'compactMode'
-const ITEMS_PER_PAGE_KEY = 'itemsPerPage'
+import { storage } from '../storage/mmkv';
+
+const PREF_KEYS = {
+  SORT_ORDER: 'preferences.sortOrder',
+  COMPACT_MODE: 'preferences.compactMode',
+  ITEMS_PER_PAGE: 'preferences.itemsPerPage',
+} as const;
+
+export type SortOrder = 'asc' | 'desc';
 
 export function usePreferences() {
-  const [sortOrder, setSortOrderState] = useState('asc')
-  const [compactMode, setCompactModeState] = useState(false)
-  const [itemsPerPage, setItemsPerPageState] = useState(10)
-  const [isLoading, setIsLoading] = useState(true)
+  const [storedSortOrder, setStoredSortOrder] = useMMKVString(
+    PREF_KEYS.SORT_ORDER,
+    storage,
+  );
+  const [storedCompactMode, setCompactMode] = useMMKVBoolean(
+    PREF_KEYS.COMPACT_MODE,
+    storage,
+  );
+  const [storedItemsPerPage, setItemsPerPage] = useMMKVNumber(
+    PREF_KEYS.ITEMS_PER_PAGE,
+    storage,
+  );
 
-  useEffect(() => {
-    async function loadPreferences() {
-      try {
-        const storedSortOrder = await storage.getString(SORT_ORDER_KEY)
-        const storedCompactMode = await storage.getString(COMPACT_MODE_KEY)
-        const storedItemsPerPage = await storage.getString(ITEMS_PER_PAGE_KEY)
+  const sortOrder: SortOrder =
+    storedSortOrder === 'desc' ? 'desc' : 'asc';
+  const compactMode = storedCompactMode ?? false;
+  const itemsPerPage = storedItemsPerPage ?? 10;
 
-        if (storedSortOrder) {
-          setSortOrderState(storedSortOrder)
-        }
-
-        if (storedCompactMode !== undefined) {
-          setCompactModeState(storedCompactMode === 'true')
-        }
-
-        if (storedItemsPerPage) {
-          setItemsPerPageState(Number(storedItemsPerPage))
-        }
-      } catch (error) {
-        console.error('Error cargando preferencias:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadPreferences()
-  }, [])
-
-  async function setSortOrder(value: string) {
-    setSortOrderState(value)
-    await storage.set(SORT_ORDER_KEY, value)
-  }
-
-  async function setCompactMode(value: boolean) {
-    setCompactModeState(value)
-    await storage.set(COMPACT_MODE_KEY, value)
-  }
-
-  async function setItemsPerPage(value: number) {
-    setItemsPerPageState(value)
-    await storage.set(ITEMS_PER_PAGE_KEY, value)
+  function setSortOrder(value: SortOrder): void {
+    setStoredSortOrder(value);
   }
 
   return {
@@ -61,6 +44,6 @@ export function usePreferences() {
     setCompactMode,
     itemsPerPage,
     setItemsPerPage,
-    isLoading,
-  }
+    isLoading: false,
+  };
 }
