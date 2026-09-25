@@ -9,5 +9,26 @@
     "ios": { "supportsTablet": false, "bundleIdentifier": "dev.ergrato.bootcamp.week08" },
     "android": { "adaptiveIcon": { "backgroundColor": "#0f172a" }, "package": "dev.ergrato.bootcamp.week08" },
     "plugins": ["expo-secure-store"]
+
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "dev.ergrato.bootcamp.week08"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a"
+      },
+      "package": "dev.ergrato.bootcamp.week08"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6026deff-62fd-4c45-923f-1dfe4a0e18a3"
+      }
+    }
+
   }
 }
