@@ -15,6 +15,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 
 import { FormField } from '../components/FormField';
+import { FormSelectField } from '../components/FormSelectField';
 import { useCreateItem } from '../hooks/useItems';
 import type { RootStackParamList } from '../navigation/types';
 import { itemSchema, type ItemFormData } from '../schemas/itemSchema';
@@ -102,13 +103,14 @@ export function CreateScreen(): React.JSX.Element {
           errorMessage={errors.price?.message}
         />
 
-        <FormField<ItemFormData>
+        <FormSelectField<ItemFormData>
           control={control}
           name="doughType"
           label="Tipo de masa *"
-          placeholder="delgada o gruesa"
-          autoCapitalize="none"
-          returnKeyType="next"
+          options={[
+            { label: 'Delgada', value: 'delgada' },
+            { label: 'Gruesa', value: 'gruesa' },
+          ]}
           errorMessage={errors.doughType?.message}
         />
 

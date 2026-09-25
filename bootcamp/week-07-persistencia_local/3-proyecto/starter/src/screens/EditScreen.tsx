@@ -19,6 +19,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 import type { RootStackParamList } from '../navigation/types';
 import { FormField } from '../components/FormField';
+import { FormSelectField } from '../components/FormSelectField';
 import { itemSchema, type ItemFormData } from '../schemas/itemSchema';
 import { useItemById, useUpdateItem } from '../hooks/useItems';
 
@@ -133,13 +134,14 @@ export function EditScreen(): React.JSX.Element {
           errorMessage={errors.price?.message}
         />
 
-        <FormField<ItemFormData>
+        <FormSelectField<ItemFormData>
           control={control}
           name="doughType"
           label="Tipo de masa *"
-          placeholder="delgada o gruesa"
-          autoCapitalize="none"
-          returnKeyType="next"
+          options={[
+            { label: 'Delgada', value: 'delgada' },
+            { label: 'Gruesa', value: 'gruesa' },
+          ]}
           errorMessage={errors.doughType?.message}
         />
 
