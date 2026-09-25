@@ -11,6 +11,7 @@ import type {
 
 export const ITEMS_QUERY_KEY = ['pizzas'] as const;
 export const PIZZAS_CACHE_KEY = '@pizza_ruta/pizzas_cache';
+const LOCAL_PIZZAS_KEY = '@pizza_ruta/local_pizzas';
 
 interface RemotePost {
   id: number;
@@ -62,7 +63,20 @@ export async function clearPizzasCache(): Promise<void> {
 }
 
 export async function clearPizzaRutaLocalData(): Promise<void> {
-  await AsyncStorage.multiRemove([PIZZAS_CACHE_KEY, '@pizza_ruta/last_sync']);
+  await AsyncStorage.multiRemove([
+    PIZZAS_CACHE_KEY,
+    LOCAL_PIZZAS_KEY,
+    '@pizza_ruta/last_sync',
+  ]);
+}
+
+async function getLocalPizzas(): Promise<Item[]> {
+  const value = await AsyncStorage.getItem(LOCAL_PIZZAS_KEY);
+  return value ? (JSON.parse(value) as Item[]) : [];
+}
+
+async function saveLocalPizzas(items: Item[]): Promise<void> {
+  await AsyncStorage.setItem(LOCAL_PIZZAS_KEY, JSON.stringify(items));
 }
 
 export function useItems() {
@@ -70,8 +84,11 @@ export function useItems() {
     queryKey: ITEMS_QUERY_KEY,
     queryFn: async () => {
       try {
-        const { data } = await apiClient.get<RemotePost[]>('/posts?_limit=15');
-        const items = data.map(mapRemotePost);
+        const [{ data }, localPizzas] = await Promise.all([
+          apiClient.get<RemotePost[]>('/posts?_limit=15'),
+          getLocalPizzas(),
+        ]);
+        const items = [...localPizzas, ...data.map(mapRemotePost)];
         await saveCache(items);
         await AsyncStorage.setItem('@pizza_ruta/last_sync', new Date().toISOString());
         return { items, source: 'network' };
@@ -104,20 +121,22 @@ export function useCreateItem() {
   const queryClient = useQueryClient();
   return useMutation<Item, Error, CreateItemPayload>({
     mutationFn: async (payload) => {
-      // JSONPlaceholder es una API de práctica: acepta el POST, pero no conserva
-      // los cambios. El ID local evita duplicados y permite crear también offline.
-      try {
-        await apiClient.post('/posts', {
+      // JSONPlaceholder no conserva escrituras. Creamos primero el registro local
+      // para que el formulario responda al instante, incluso con una red lenta.
+      const newItem: Item = { ...payload, id: createLocalId() };
+
+      void apiClient
+        .post('/posts', {
           title: payload.name,
           body: payload.description,
+        })
+        .catch(() => {
+          if (__DEV__) {
+            console.warn('Sin conexión: la pizza quedó guardada localmente.');
+          }
         });
-      } catch {
-        if (__DEV__) {
-          console.warn('Sin conexión: la pizza se guardará localmente.');
-        }
-      }
 
-      return { ...payload, id: createLocalId() };
+      return newItem;
     },
     onSuccess: (newItem) => {
       const current = queryClient.getQueryData<ItemsWithSource>(ITEMS_QUERY_KEY);
@@ -130,9 +149,14 @@ export function useCreateItem() {
         source: current?.source ?? 'network',
       });
 
-      void saveCache(items).catch((error: unknown) => {
-        console.error('No se pudo actualizar la caché de pizzas:', error);
-      });
+      const localPizzas = items.filter((item) =>
+        String(item.id).startsWith('local-'),
+      );
+      void Promise.all([saveCache(items), saveLocalPizzas(localPizzas)]).catch(
+        (error: unknown) => {
+          console.error('No se pudo actualizar la caché de pizzas:', error);
+        },
+      );
     },
   });
 }

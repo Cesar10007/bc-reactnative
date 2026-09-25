@@ -68,12 +68,15 @@ export function CreateScreen(): React.JSX.Element {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 24}
     >
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         <Text style={styles.hint}>
           Completa los datos de la nueva pizza. Los campos marcados con * son obligatorios.
@@ -168,7 +171,7 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING.lg,
     gap: SPACING.md,
-    paddingBottom: SPACING.xxl,
+    paddingBottom: 180,
   },
   hint: {
     ...TYPOGRAPHY.caption,

@@ -94,12 +94,15 @@ export function EditScreen(): React.JSX.Element {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 24}
     >
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         <Text style={styles.hint}>
           Los campos se rellenan automáticamente con los datos actuales de la pizza.
@@ -187,7 +190,7 @@ export function EditScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: COLORS.background },
   container: { flex: 1 },
-  content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xxl },
+  content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: 180 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background },
   hint: { ...TYPOGRAPHY.caption, fontStyle: 'italic' },
   actions: { gap: SPACING.sm, marginTop: SPACING.sm },
