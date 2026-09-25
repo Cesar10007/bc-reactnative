@@ -1,28 +1,29 @@
 {
   "expo": {
-    "name": "Week 09 — Animaciones",
-    "slug": "week09-animaciones",
-    "scheme": "bcanim09",
-    "version": "1.0.0",
+    "name": "Pizza Ruta",
+    "slug": "pizza-ruta-w9",
+    "owner": "c3sar1007",
+    "version": "1.9.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "scheme": "pizzaruta",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "backgroundColor": "#0f172a"
-    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "dev.ergrato.week09"
+      "bundleIdentifier": "dev.ergrato.bootcamp.week09"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0f172a"
       },
-      "package": "dev.ergrato.week09"
+      "package": "dev.ergrato.bootcamp.week09"
     },
     "plugins": [
-      "expo-router"
-    ]
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cf5f5d88-b17a-49d2-a2be-aa1b6a9eafc7"
+      }
+    }
   }
 }
