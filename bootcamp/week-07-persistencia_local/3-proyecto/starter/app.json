@@ -5,13 +5,12 @@
     "version": "1.7.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#0f172a"
-    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "dev.ergrato.bootcamp.week07"
+      "bundleIdentifier": "dev.ergrato.bootcamp.week07",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +18,6 @@
       },
       "package": "dev.ergrato.bootcamp.week07"
     },
-    "newArchEnabled": true,
     "plugins": [
       "expo-secure-store",
       "expo-status-bar"
