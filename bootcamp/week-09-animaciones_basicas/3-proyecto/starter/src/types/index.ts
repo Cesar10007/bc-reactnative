@@ -1,21 +1,23 @@
-// Domain types — adapt to your assigned domain.
-
-// Base item for the domain list.
-// Add specific fields for your domain.
-// Examples:
-//   Biblioteca: author: string; isbn: string; isAvailable: boolean;
-//   Farmacia: price: number; stock: number; category: string;
-//   Gimnasio: membershipType: string; daysActive: number;
 export interface Item {
-  id: string;
+  id: string | number;
   name: string;
+  image: string;
   description: string;
-  // TODO: Add domain-specific fields here
-  progress?: number; // 0-1, used for ProgressBar
+  price: number;
+  flavor: string;
+  doughType: 'delgada' | 'gruesa';
 }
+export type CreateItemPayload = Omit<Item, 'id'>;
+export interface UpdateItemPayload extends CreateItemPayload { id: string | number }
+export interface ItemsWithSource { items: Item[]; source: 'network' | 'cache' }
 
-// Response shape from the API
-export interface ApiResponse<T> {
-  data: T[];
-  total: number;
+export interface AuthTokens { accessToken: string; refreshToken: string }
+export interface AuthUser {
+  id: number; username: string; email: string; firstName: string; lastName: string; image?: string;
+}
+export interface JwtPayload { sub: number; username: string; iat: number; exp: number }
+export interface LoginCredentials { username: string; password: string }
+export interface RegisterData { username: string; email: string; password: string; firstName?: string; lastName?: string }
+export interface AuthResponse extends AuthTokens {
+  id: number; username: string; email: string; firstName: string; lastName: string; image: string;
 }
