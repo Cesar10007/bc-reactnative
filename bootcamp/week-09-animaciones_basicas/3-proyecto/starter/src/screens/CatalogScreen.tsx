@@ -52,6 +52,7 @@ export function CatalogScreen({ navigation }: HomeScreenProps): React.JSX.Elemen
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const headerY = useRef(new Animated.Value(-18)).current;
   const rotation = useRef(new Animated.Value(0)).current;
+  const iconOpacity = useRef(new Animated.Value(0)).current;
   const itemAnimations = useRef(new Map<string, Animated.Value>()).current;
   const previousCount = useRef<number | null>(null);
 
@@ -77,7 +78,12 @@ export function CatalogScreen({ navigation }: HomeScreenProps): React.JSX.Elemen
       Animated.timing(headerY, { toValue: 0, duration: 500, useNativeDriver: true }),
       Animated.timing(rotation, { toValue: 1, duration: 700, useNativeDriver: true }),
     ]).start();
-  }, [headerOpacity, headerY, rotation]);
+    Animated.sequence([
+      Animated.timing(iconOpacity, { toValue: 1, duration: 260, useNativeDriver: true }),
+      Animated.timing(iconOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
+      Animated.timing(iconOpacity, { toValue: 1, duration: 260, useNativeDriver: true }),
+    ]).start();
+  }, [headerOpacity, headerY, iconOpacity, rotation]);
 
   useEffect(() => {
     const animations = catalog.visibleItems.map((item) => {
@@ -142,7 +148,7 @@ export function CatalogScreen({ navigation }: HomeScreenProps): React.JSX.Elemen
     <View style={styles.container}>
       {data?.source === 'cache' && <View style={styles.offline}><Text style={styles.offlineText}>⚠️ Sin red — catálogo guardado en el dispositivo</Text></View>}
       <Animated.View style={[styles.hero, { opacity: headerOpacity, transform: [{ translateY: headerY }] }]}>
-        <View style={styles.titleRow}><Animated.Text style={[styles.pizzaIcon, { transform: [{ rotate: spin }] }]}>🍕</Animated.Text><Text style={styles.title}>Pizza Ruta</Text></View>
+        <View style={styles.titleRow}><Animated.Text style={[styles.pizzaIcon, { opacity: iconOpacity, transform: [{ rotate: spin }] }]}>🍕</Animated.Text><Text style={styles.title}>Pizza Ruta</Text></View>
         <Text style={styles.muted}>Pizzas artesanales con delivery</Text>
       </Animated.View>
       <View style={styles.searchWrap}><TextInput style={styles.search} value={query} onChangeText={setQuery} placeholder="Buscar por pizza o sabor..." placeholderTextColor={COLORS.textMuted} /></View>
