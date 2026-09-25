@@ -2,6 +2,7 @@
   "expo": {
     "name": "Pizza Ruta",
     "slug": "pizza-ruta-w9",
+    "owner": "c3sar1007",
     "version": "1.9.0",
     "orientation": "portrait",
     "scheme": "pizzaruta",
@@ -18,6 +19,11 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cf5f5d88-b17a-49d2-a2be-aa1b6a9eafc7"
+      }
+    }
   }
 }
