@@ -1,59 +1,45 @@
 import React, { useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
-import { COLORS, RADII } from '../theme';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 
-interface AnimatedButtonProps {
-  label: string;
-  onPress: () => void;
-  variant?: 'primary' | 'success';
-}
+interface Props { label: string; onPress: () => void; danger?: boolean }
 
-export function AnimatedButton({
-  label,
-  onPress,
-  variant = 'primary',
-}: AnimatedButtonProps): React.JSX.Element {
-  // TODO: Crear el Animated.Value para la escala.
-  // const scaleAnim = useRef(new Animated.Value(1)).current;
+export function AnimatedButton({ label, onPress, danger = false }: Props): React.JSX.Element {
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    // TODO: Comprimir el botón a 0.96 con Animated.timing (duración 80ms).
-    // useNativeDriver: true
-  };
+  function pressIn(): void {
+    Animated.parallel([
+      Animated.timing(scale, { toValue: 0.96, duration: 80, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0.75, duration: 80, useNativeDriver: true }),
+    ]).start();
+  }
 
-  const handlePressOut = () => {
-    // TODO: Volver a escala 1 con Animated.spring.
-    // tension: 400, friction: 12, useNativeDriver: true
-  };
-
-  const bgColor =
-    variant === 'success' ? COLORS.success : COLORS.primary;
+  function pressOut(): void {
+    Animated.sequence([
+      Animated.spring(scale, { toValue: 1.03, tension: 400, friction: 12, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, tension: 300, friction: 12, useNativeDriver: true }),
+    ]).start();
+    Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+  }
 
   return (
-    // TODO: Reemplazar View por Animated.View con transform: [{ scale: scaleAnim }]
-    <Animated.View>
+    <Animated.View style={{ opacity, transform: [{ scale }] }}>
       <Pressable
-        style={[styles.button, { backgroundColor: bgColor }]}
+        style={[styles.button, danger && styles.danger]}
         onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+        onPressIn={pressIn}
+        onPressOut={pressOut}
       >
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.text, danger && styles.dangerText]}>{label}</Text>
       </Pressable>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    borderRadius: RADII.md,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  label: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  button: { backgroundColor: COLORS.accent, borderRadius: RADIUS.sm, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, alignItems: 'center' },
+  danger: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.error },
+  text: { ...TYPOGRAPHY.body, color: COLORS.background, fontWeight: '700' },
+  dangerText: { color: COLORS.error },
 });

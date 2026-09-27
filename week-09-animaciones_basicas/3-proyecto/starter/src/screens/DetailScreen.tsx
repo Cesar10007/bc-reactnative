@@ -1,126 +1,73 @@
-import React, { useEffect, useRef } from 'react';
-import {
-  Animated,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import { Animated, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+import { AnimatedButton } from '../components/AnimatedButton';
 import { ProgressBar } from '../components/ProgressBar';
-import { COLORS, SPACING } from '../theme';
+import { useItemById } from '../hooks/useItems';
 import type { RootStackParamList } from '../navigation/types';
+import { useSavedStore } from '../stores/savedStore';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>;
 
-export function DetailScreen({ route }: Props): React.JSX.Element {
-  const { itemId } = route.params;
+export function DetailScreen({ route, navigation }: Props): React.JSX.Element {
+  const routeItem = route.params;
+  const { data: currentItem } = useItemById(routeItem.id);
+  const item = currentItem ?? routeItem;
+  const isSaved = useSavedStore((state) => state.isItemSaved(item.id));
+  const addItem = useSavedStore((state) => state.addItem);
+  const removeItem = useSavedStore((state) => state.removeItem);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(30)).current;
 
-  // TODO: Create Animated.Values for the entrance animation.
-  // Two values needed:
-  //   opacityAnim = useRef(new Animated.Value(0)).current
-  //   translateYAnim = useRef(new Animated.Value(30)).current
+  useLayoutEffect(() => { navigation.setOptions({ title: item.name }); }, [item.name, navigation]);
 
   useEffect(() => {
-    // TODO: Use Animated.parallel to run fade in + slide up simultaneously.
-    //
-    // Animated.parallel([
-    //   Animated.timing(opacityAnim, {
-    //     toValue: 1,
-    //     duration: 500,
-    //     useNativeDriver: true,
-    //   }),
-    //   Animated.timing(translateYAnim, {
-    //     toValue: 0,
-    //     duration: 500,
-    //     useNativeDriver: true,
-    //   }),
-    // ]).start();
-  }, []);
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 500, useNativeDriver: true }),
+    ]).start();
+  }, [opacity, translateY]);
 
-  // Simulated item data — replace with useQuery in a real implementation.
-  const item = {
-    id: itemId,
-    name: `Item ${itemId}`,
-    description:
-      'Esta es la descripción detallada del item. Adapta esta pantalla a tu dominio mostrando la información relevante de cada elemento.',
-    progress: 0.72,
-    // TODO: Add domain-specific fields
-  };
+  function toggleFavorite(): void {
+    if (isSaved) removeItem(item.id);
+    else addItem(item);
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* TODO: Wrap this View in an Animated.View and apply the entrance animation.
-            animated style:
-              opacity: opacityAnim,
-              transform: [{ translateY: translateYAnim }]
-        */}
-        <View>
-          <View style={styles.card}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.description}>{item.description}</Text>
-          </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+        <Image source={{ uri: item.image }} style={styles.heroImage} />
+        <Text style={styles.title}>{item.name}</Text>
+        <Text style={styles.idBadge}>ID: {item.id}</Text>
 
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Progreso</Text>
-            <ProgressBar progress={item.progress} label="Completado" />
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Detalles técnicos</Text>
-            <Text style={styles.detailRow}>
-              <Text style={styles.detailLabel}>ID: </Text>
-              <Text style={styles.detailValue}>{item.id}</Text>
-            </Text>
-            {/* TODO: Add domain-specific detail rows */}
-          </View>
+        <View style={styles.detailsCard}>
+          <Text style={styles.description}>{item.description}</Text>
+          <Text style={styles.detail}>Sabor: {item.flavor}</Text>
+          <Text style={styles.detail}>Masa: {item.doughType}</Text>
+          <Text style={styles.price}>${item.price.toLocaleString('es-CO')}</Text>
+          <ProgressBar progress={Math.min(item.price / 50000, 1)} label="Nivel de precio" />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        <View style={styles.actions}>
+          <AnimatedButton label={isSaved ? '♥ Quitar de favoritas' : '♡ Guardar como favorita'} onPress={toggleFavorite} />
+          <AnimatedButton label="Editar pizza" onPress={() => navigation.navigate('Edit', { id: item.id, name: item.name })} />
+        </View>
+      </Animated.View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  content: {
-    padding: SPACING.xl,
-    gap: SPACING.md,
-  },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    padding: SPACING.lg,
-    gap: SPACING.sm,
-  },
-  name: {
-    color: COLORS.text,
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  description: {
-    color: COLORS.textSecondary,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  sectionTitle: {
-    color: COLORS.accent,
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  detailRow: {
-    fontSize: 14,
-  },
-  detailLabel: {
-    color: COLORS.textMuted,
-  },
-  detailValue: {
-    color: COLORS.text,
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  content: { padding: SPACING.lg, paddingBottom: SPACING.xxl },
+  heroImage: { width: '100%', height: 220, borderRadius: RADIUS.lg, marginBottom: SPACING.md },
+  title: { ...TYPOGRAPHY.h2 },
+  idBadge: { ...TYPOGRAPHY.label, textTransform: 'uppercase', letterSpacing: 1, marginVertical: SPACING.sm },
+  detailsCard: { backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, padding: SPACING.md, gap: SPACING.sm },
+  description: { ...TYPOGRAPHY.body, color: COLORS.textSecondary, marginBottom: SPACING.sm },
+  detail: { ...TYPOGRAPHY.body, color: COLORS.textSecondary },
+  price: { ...TYPOGRAPHY.h3, color: COLORS.accent },
+  actions: { gap: SPACING.sm, marginTop: SPACING.md },
 });

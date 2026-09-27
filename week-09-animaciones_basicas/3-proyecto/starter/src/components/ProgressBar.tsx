@@ -1,101 +1,47 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import { COLORS } from '../theme';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 
-interface ProgressBarProps {
-  // progress between 0 and 1
-  progress: number;
-  label?: string;
-}
+interface Props { progress: number; label: string }
 
-export function ProgressBar({
-  progress,
-  label,
-}: ProgressBarProps): React.JSX.Element {
-  const progressAnim = useRef(new Animated.Value(0)).current;
+export function ProgressBar({ progress, label }: Props): React.JSX.Element {
+  const value = Math.max(0, Math.min(1, progress));
+  const animated = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // TODO: Animar progressAnim hasta el valor de `progress` (0-1).
-    // Usar Animated.timing con duración 800ms.
-    // ⚠️ useNativeDriver: false → 'width' y 'backgroundColor' no son nativas.
-    //
-    // Animated.timing(progressAnim, {
-    //   toValue: progress,
-    //   duration: 800,
-    //   useNativeDriver: false,
-    // }).start();
-  }, [progress, progressAnim]);
+    Animated.timing(animated, {
+      toValue: value,
+      duration: 800,
+      // Width and color are layout/style properties unsupported by the native driver.
+      useNativeDriver: false,
+    }).start();
+  }, [animated, value]);
 
-  // TODO: Crear widthInterp con interpolate.
-  // inputRange:  [0, 1]
-  // outputRange: ['0%', '100%']
-  // extrapolate: 'clamp'
-  //
-  // const widthInterp = progressAnim.interpolate({
-  //   inputRange: [0, 1],
-  //   outputRange: ['0%', '100%'],
-  //   extrapolate: 'clamp',
-  // });
-
-  // TODO: Crear colorInterp con interpolate.
-  // inputRange:  [0, 0.5, 1]
-  // outputRange: [COLORS.error, COLORS.warning, COLORS.success]
-  // extrapolate: 'clamp'
-  //
-  // const colorInterp = progressAnim.interpolate({
-  //   inputRange: [0, 0.5, 1],
-  //   outputRange: [COLORS.error, COLORS.warning, COLORS.success],
-  //   extrapolate: 'clamp',
-  // });
-
-  const percentage = Math.round(progress * 100);
+  const width = animated.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'], extrapolate: 'clamp' });
+  const backgroundColor = animated.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [COLORS.error, COLORS.warning, COLORS.success],
+    extrapolate: 'clamp',
+  });
 
   return (
     <View style={styles.container}>
-      {label !== undefined && (
-        <View style={styles.header}>
-          <Text style={styles.label}>{label}</Text>
-          <Text style={styles.percentage}>{percentage}%</Text>
-        </View>
-      )}
+      <View style={styles.header}>
+        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.percentage}>{Math.round(value * 100)}%</Text>
+      </View>
       <View style={styles.track}>
-        {/* TODO: Reemplazar el View por Animated.View y usar widthInterp + colorInterp */}
-        {/* <Animated.View
-          style={[styles.fill, { width: widthInterp, backgroundColor: colorInterp }]}
-        /> */}
-        <View style={[styles.fill, { width: `${percentage}%` }]} />
+        <Animated.View style={[styles.fill, { width, backgroundColor }]} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 6,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  label: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-  },
-  percentage: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  track: {
-    height: 10,
-    backgroundColor: '#0f172a',
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: 10,
-    backgroundColor: COLORS.error,
-    borderRadius: 5,
-  },
+  container: { gap: SPACING.xs },
+  header: { flexDirection: 'row', justifyContent: 'space-between' },
+  label: { ...TYPOGRAPHY.caption },
+  percentage: { ...TYPOGRAPHY.caption, fontWeight: '700' },
+  track: { height: 10, backgroundColor: COLORS.surfaceHigh, borderRadius: RADIUS.full, overflow: 'hidden' },
+  fill: { height: 10, borderRadius: RADIUS.full },
 });
