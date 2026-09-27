@@ -1,267 +1,137 @@
-<p align="center">
-  <img src="assets/bootcamp-header.svg" alt="Bootcamp React Native Zero to Hero" width="800">
-</p>
+Pizza Ruta - Pizzería con Delivery
+Autor: César David Rueda Daza
+Ficha: 3311987
+Bootcamp: bc-reactnative — semanas 1 a 9
+Correo: ruedacesardavid@gmail.com
+Dominio: Pizzería con delivery
+Entidad principal: Item (pizza) — name, image, price, flavor, doughType
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-CC%20BY--NC--SA%204.0-lightgrey.svg" alt="License CC BY-NC-SA 4.0"></a>
-  <a href="#"><img src="https://img.shields.io/badge/semanas-18-yellow.svg" alt="18 Semanas"></a>
-  <a href="#"><img src="https://img.shields.io/badge/horas-144-orange.svg" alt="144 Horas"></a>
-  <a href="#"><img src="https://img.shields.io/badge/React_Native-61DAFB?logo=react&logoColor=black" alt="React Native"></a>
-</p>
+App móvil para catálogo y gestión de pedidos de una pizzería, construida desde cero con React Native + Expo + TypeScript, cumpliendo las rúbricas de las semanas 1 a 9 del bootcamp [ergrato-dev/bc-reactnative](https://github.com/ergrato-dev/bc-reactnative), en el repositorio [Cesar10007/bc-reactnative](https://github.com/Cesar10007/bc-reactnative).
 
-<p align="center">
-  <a href="README_EN.md"><img src="https://img.shields.io/badge/🇺🇸_English-0969DA?style=for-the-badge&logoColor=white" alt="English Version"></a>
-</p>
+## 🌳 Estructura del repositorio (evaluación por semana)
 
----
+El repositorio sigue el flujo de eval-semanal: una rama por semana con el código y README correspondiente, más una consolidación de todas las semanas dentro de `week-09` para evaluación final.
 
-## 📋 Descripción
+| Rama | Semana | Contenido de la entrega |
+|---|---|---|
+| week-01 | 01 | Core Components y Flexbox: interfaz `Item` (name, image, price, flavor, doughType), 4 pizzas mock, `ItemCard` con `Pressable` y feedback visual, `HomeScreen` con header y `ScrollView` |
+| week-02 | 02 | Listas, inputs y estilos |
+| week-03 | 03 | React Navigation: `AppNavigator`, `AuthNavigator`, `RootNavigator`, tipos de rutas (`navigation/types.ts`) |
+| week-04 | 04 | Estado global con Zustand: `savedStore` (favoritos/guardados) |
+| week-05 | 05 | Networking: `services/api.ts` y `services/pizzaApi.ts`, hook `useItems` |
+| week-06 | 06 | Formularios y validación: `itemSchema` (Zod), `FormField`, `FormSelectField`, `PizzaFormField`, pantallas `CreateScreen` y `EditScreen` |
+| week-07 | 07 | Persistencia local con MMKV (`storage/mmkv.ts`), preferencias (`usePreferences`), `SettingsScreen` |
+| week-08 | 08 | Autenticación: `authSchema`, `authStore`, `authService`, `tokenService`, `LoginScreen`, `RegisterScreen` |
+| week-09 | 09 | Animaciones básicas: `AnimatedButton`, `AnimatedCard`, `ProgressBar` aplicados al catálogo |
+| main | — | Base del template del bootcamp (ergrato-dev), no contiene la app integrada de Pizza Ruta |
 
-Bootcamp intensivo de **18 semanas (~4.5 meses)** enfocado en el dominio de **React Native** y desarrollo de aplicaciones móviles modernas con Expo. Diseñado para llevar a desarrolladores con experiencia en JavaScript/TypeScript y React hasta **Desarrollador Mobile Junior**, con énfasis en código limpio, mejores prácticas y apps listas para producción.
+> Nota: la rama `week-09` es la que contiene la app consolidada y funcional con las 9 semanas integradas (carpetas `week-01-...` a `week-09-...` dentro del repo, tras la reorganización hecha para evaluación).
 
-### 🎯 Objetivos
+## 🎯 Objetivo del dominio
 
-Al finalizar el bootcamp, los estudiantes serán capaces de:
+**Pizza Ruta** es una pizzería con servicio de delivery. La app gestiona el catálogo de pizzas y el flujo asociado:
 
-- ✅ Dominar los fundamentos de React Native y Expo
-- ✅ Construir interfaces móviles con Core Components y Flexbox
-- ✅ Implementar navegación compleja con React Navigation 7
-- ✅ Gestionar estado global con Zustand y servidor con TanStack Query
-- ✅ Consumir APIs REST de forma robusta y tipada
-- ✅ Manejar formularios con React Hook Form + Zod
-- ✅ Implementar persistencia local y autenticación completa
-- ✅ Crear animaciones fluidas con Reanimated 3 y Gesture Handler
-- ✅ Acceder a APIs nativas (cámara, geolocalización, notificaciones)
-- ✅ Escribir tests automatizados con Jest, RNTL y Maestro
-- ✅ Optimizar performance de apps React Native
-- ✅ Publicar en App Store y Google Play con EAS Build
-- ✅ Implementar CI/CD y OTA updates con EAS Update
+- **Catálogo (`CatalogScreen`, `HomeScreen`):** listado de pizzas con nombre, imagen, precio, sabor (`flavor`) y tipo de masa (`doughType`)
+- **Detalle (`DetailScreen`):** vista ampliada de una pizza
+- **Crear / Editar (`CreateScreen`, `EditScreen`):** alta y edición de pizzas con validación vía `itemSchema` (Zod) y campos reutilizables (`FormField`, `FormSelectField`, `PizzaFormField`)
+- **Guardados (`SavedScreen`, `savedStore`):** pizzas favoritas persistidas con Zustand
+- **Autenticación (`LoginScreen`, `RegisterScreen`, `authStore`, `authService`, `tokenService`):** inicio de sesión y registro
+- **Perfil (`ProfileScreen`):** datos del usuario autenticado
+- **Ajustes (`SettingsScreen`, `usePreferences`):** preferencias persistidas en almacenamiento local (MMKV)
+- **Animaciones (semana 9):** `AnimatedButton`, `AnimatedCard` y `ProgressBar` para feedback visual en el catálogo
 
-### 🚀 ¿Por qué React Native con Expo?
+## 🚀 Cómo ejecutar el proyecto
 
-> **React Native moderno desde el día 1** — Sin código legacy, solo las mejores prácticas actuales.
+**Requisitos**
+- Node.js 18+ (stack usa Expo SDK 57 / React Native 0.86)
+- pnpm (via corepack)
+- Expo Go instalado en el celular (Android/iOS)
+- Celular y computador en la misma red WiFi
 
-React Native con Expo es el stack más productivo para desarrollar apps móviles multiplataforma con JavaScript. Este bootcamp se enfoca exclusivamente en Expo SDK 57+ y React Native 0.86+ (New Architecture), con TypeScript desde el primer día. Los estudiantes aprenden directamente las herramientas y técnicas que usarán en el mundo profesional.
-
----
-
-## 🗓️ Estructura del Bootcamp
-
-|          Fase          | Semanas | Horas | Temas Principales                                          |
-| :--------------------: | :-----: | :---: | ---------------------------------------------------------- |
-| **Fundamentos RN**     |   1-2   |  16h  | Core Components, Flexbox, listas, inputs, estilos          |
-| **Core RN**            |  3-8    |  48h  | Navegación, Zustand, TanStack Query, formularios, auth     |
-| **Avanzado**           |  9-14   |  48h  | Animaciones, APIs nativas, notificaciones, testing, perf   |
-| **Producción**         |  15-18  |  32h  | EAS Build, stores, CI/CD, OTA updates, proyecto final      |
-
-**Total: 18 semanas** | **144 horas** de formación intensiva
-
----
-
-## 📚 Contenido por Semana
-
-Cada semana incluye:
-
-```
-bootcamp/week-XX-tema_principal/
-├── README.md                 # Descripción y objetivos
-├── rubrica-evaluacion.md     # Criterios de evaluación
-├── 0-assets/                 # Imágenes y diagramas
-├── 1-teoria/                 # Material teórico
-├── 2-practicas/              # Ejercicios guiados
-├── 3-proyecto/               # Proyecto semanal
-├── 4-recursos/               # Recursos adicionales
-│   ├── ebooks-free/
-│   ├── videografia/
-│   └── webgrafia/
-└── 5-glosario/               # Términos clave
-```
-
-### 🔑 Componentes Clave
-
-- 📖 **Teoría**: Conceptos fundamentales con ejemplos del mundo real
-- 💻 **Práctica**: Ejercicios progresivos y proyectos hands-on
-- 📝 **Evaluación**: Evidencias de conocimiento, desempeño y producto
-- 🎓 **Recursos**: Glosarios, referencias y material complementario
-
----
-
-## 🛠️ Stack Tecnológico
-
-| Tecnología         | Versión       | Uso                          |
-| ------------------ | ------------- | ---------------------------- |
-| React Native       | **0.86**      | Framework mobile (New Architecture) |
-| Expo SDK           | **57**        | Plataforma de desarrollo     |
-| TypeScript         | **6.0**       | Lenguaje principal           |
-| React Navigation   | **7.3**       | Navegación                   |
-| Zustand            | **5.x**       | Estado global                |
-| TanStack Query     | **v5**        | Estado servidor / caché      |
-| React Hook Form    | **7.x**       | Formularios                  |
-| Zod                | **4.x**       | Validación de esquemas       |
-| Expo SecureStore   | **57.x**      | Almacenamiento seguro        |
-| Reanimated         | **4.x**       | Animaciones avanzadas (requiere New Architecture) |
-| Gesture Handler    | **2.32**      | Gestos táctiles              |
-| EAS Build / Update | **latest**    | Build y OTA en producción    |
-| Jest + RNTL        | **29 / 13**   | Testing unitario             |
-| Maestro            | **1.x**       | Testing E2E                  |
-| pnpm               | **10.x**      | Gestión de paquetes          |
-
-**Entorno de desarrollo**: Expo Go + simuladores iOS/Android  
-**Publicación**: App Store Connect + Google Play Console vía EAS
-
----
-## 🚀 Inicio Rápido
-
-### Prerrequisitos
-
-- **Node.js 22+** instalado
-- **pnpm** como gestor de paquetes (`corepack enable && corepack prepare pnpm@latest --activate`)
-- **Expo Go** en tu dispositivo físico ([iOS](https://apps.apple.com/app/expo-go/id982107779) / [Android](https://play.google.com/store/apps/details?id=host.exp.exponent))
-- **Git** para control de versiones
-- **VS Code** (recomendado) con extensiones incluidas
-- Simulador iOS (Xcode) o Android (Android Studio) para features nativas
-
-### 1. Clonar el Repositorio
-
+**Pasos**
 ```bash
-git clone https://github.com/ergrato-dev/bc-reactnative.git
+# 1. Clonar y entrar
+git clone https://github.com/Cesar10007/bc-reactnative.git
 cd bc-reactnative
+git checkout week-09
+
+# 2. Entrar al proyecto de la semana 9 (app consolidada)
+cd week-09-animaciones_basicas/3-proyecto/starter
+
+# 3. Instalar dependencias
+pnpm install
+
+# 4. Arrancar Metro
+pnpm start
+
+# 5. Escanear el QR con Expo Go (Android) o Cámara (iOS)
 ```
 
-### 2. Instalar Extensiones de VS Code
+## 📱 Stack tecnológico
 
-```bash
-# Abrir en VS Code
-code .
+| Capa | Tecnología |
+|---|---|
+| Framework | React Native 0.86 + Expo SDK 57 |
+| Lenguaje | TypeScript 6 |
+| Navegación | @react-navigation (Stack + Tabs), navegación tipada |
+| Estado global | Zustand (`authStore`, `savedStore`) |
+| Datos remotos | `pizzaApi` / `api` (cliente HTTP propio) |
+| Formularios | React Hook Form + Zod 4 (`itemSchema`, `authSchema`) |
+| Persistencia | react-native-mmkv |
+| Animaciones | Reanimated 4 / Animated API (`AnimatedButton`, `AnimatedCard`, `ProgressBar`) |
+| Gestión de paquetes | pnpm |
 
-# Las extensiones recomendadas aparecerán automáticamente
-# O ejecutar: Ctrl+Shift+P → "Extensions: Show Recommended Extensions"
+## 🗂️ Estructura del código (rama week-09, proyecto consolidado)
+
+```
+week-09-animaciones_basicas/3-proyecto/starter/src/
+├── components/     # AnimatedButton, AnimatedCard, FormField, FormSelectField, PizzaFormField, ProgressBar
+├── hooks/          # useItems, usePreferences
+├── navigation/     # AppNavigator, AuthNavigator, RootNavigator, types
+├── schemas/        # authSchema, itemSchema (Zod)
+├── screens/        # HomeScreen, CatalogScreen, DetailScreen, CreateScreen, EditScreen,
+│                   # LoginScreen, RegisterScreen, ProfileScreen, SavedScreen, SettingsScreen
+├── services/       # api, pizzaApi, authService, tokenService
+├── storage/        # mmkv (persistencia local)
+├── stores/         # authStore, savedStore (Zustand)
+├── theme/          # tema de la app
+└── types/          # tipos de dominio (Item, etc.)
 ```
 
-### 3. Navegar a la Semana Actual
+## ✅ Funcionalidades por semana (resumen)
 
-```bash
-cd bootcamp/week-01-core_components_y_flexbox
+**Semana 01 — Core Components y Flexbox**
+Interfaz `Item` con `name`, `image`, `price`, `flavor` y `doughType`; 4 pizzas de ejemplo; `ItemCard` con `Pressable` y feedback visual (opacidad + borde); `HomeScreen` con header y `ScrollView`.
+
+**Semana 02 — Listas, inputs y estilos**
+Listado y estilos aplicados al catálogo de pizzas.
+
+**Semana 03 — Navegación**
+`AppNavigator`, `AuthNavigator` y `RootNavigator` con rutas tipadas para moverse entre Home, Catálogo, Detalle y Auth.
+
+**Semana 04 — Estado global**
+`savedStore` con Zustand para guardar pizzas favoritas.
+
+**Semana 05 — Networking**
+`services/api.ts` y `services/pizzaApi.ts` junto al hook `useItems` para traer el catálogo.
+
+**Semana 06 — Formularios y validación**
+`itemSchema` con Zod, formularios reutilizables (`FormField`, `FormSelectField`, `PizzaFormField`) usados en `CreateScreen` y `EditScreen`.
+
+**Semana 07 — Persistencia local**
+Almacenamiento con MMKV (`storage/mmkv.ts`) y preferencias (`usePreferences`) reflejadas en `SettingsScreen`.
+
+**Semana 08 — Autenticación**
+`authSchema`, `authStore`, `authService` y `tokenService` para login y registro (`LoginScreen`, `RegisterScreen`).
+
+**Semana 09 — Animaciones básicas**
+`AnimatedButton`, `AnimatedCard` y `ProgressBar` aplicados al catálogo para feedback visual al interactuar.
+
+## 📝 Commits
+
+Convención usada en este repositorio:
+```
+feat(week-XX): <resumen de la semana> - Pizza Ruta 3311987
 ```
 
-### 4. Seguir las Instrucciones
-
-Cada semana contiene un `README.md` con instrucciones detalladas.
-
----
-
-## 📊 Metodología de Aprendizaje
-
-### Estrategias Didácticas
-
-- 🎯 **Aprendizaje Basado en Proyectos (ABP)**
-- 🏛️ **Dominios Únicos**: Cada aprendiz aplica conceptos a su dominio asignado (anticopia)
-- 🧩 **Práctica Deliberada**
-- 📱 **Mobile-First Thinking**
-- 👥 **Code Review entre pares**
-- 🎮 **Live Coding**
-
-### Distribución del Tiempo (8h/semana)
-
-- **Teoría**: 2 horas
-- **Prácticas**: 3-4 horas
-- **Proyecto**: 2-3 horas
-
-### Evaluación
-
-Cada semana incluye tres tipos de evidencias:
-
-1. **Conocimiento 🧠** (30%): Cuestionarios y evaluaciones teóricas
-2. **Desempeño 💪** (40%): Ejercicios prácticos en clase
-3. **Producto 📦** (30%): Entregables evaluables (proyectos funcionales)
-
-**Criterio de aprobación**: Mínimo 70% en cada tipo de evidencia. Implementación coherente con el dominio asignado. Originalidad: sin copia entre aprendices.
-
----
-
-## 🏛️ Política de Dominios Únicos (Anticopia)
-
-Cada aprendiz recibe un **dominio único asignado por el instructor** desde la primera clase, que usa en todos los proyectos del bootcamp.
-
-Ejemplos de dominios: 📖 Biblioteca, 💊 Farmacia, 🏋️ Gimnasio, 🏫 Escuela, 🏬 Tienda de mascotas, 🍽️ Restaurante, 🏦 Banco, 🚕 Taxis, 🏥 Hospital, 🎥 Cine, 🏞️ Hotel, ✈️ Viajes, 🏎️ Concesionario, 👗 Ropa, 🛠️ Taller, y más.
-
-**Objetivo:**
-
-- ✅ Prevenir copia entre estudiantes
-- ✅ Fomentar implementaciones originales
-- ✅ Aplicar conceptos generales a contextos específicos
-- ✅ Desarrollar capacidad de abstracción y adaptación
-
-**Responsabilidades del instructor:**
-
-1. Asignar un dominio único a cada aprendiz al inicio
-2. Mantener registro de dominios asignados
-3. No repetir dominios en el mismo grupo
-4. Validar coherencia con el dominio en evaluaciones
-
----
-
-## 📞 Soporte
-
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/ergrato-dev/bc-reactnative/discussions)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/ergrato-dev/bc-reactnative/issues)
-
----
-
-## ⚠️ Exención de Responsabilidad
-
-Este repositorio es un recurso **educativo** creado con fines de aprendizaje. Al utilizarlo, aceptas los siguientes términos:
-
-- **Solo fines educativos**: El contenido, los ejemplos de código y los proyectos están diseñados exclusivamente para la enseñanza y el aprendizaje. No constituyen asesoramiento profesional, legal ni de seguridad.
-- **Sin garantías**: El material se proporciona **"tal cual"**, sin garantías de ningún tipo, expresas o implícitas, incluyendo idoneidad para un propósito particular o ausencia de errores.
-- **Código en producción**: Los ejemplos de código son ilustrativos. Antes de usarlos en entornos productivos, debes realizar revisiones de seguridad, rendimiento y adaptación a tu contexto específico.
-- **Versiones de software**: Las versiones de librerías y herramientas mencionadas pueden quedar desactualizadas. Siempre consulta la documentación oficial más reciente.
-- **Limitación de responsabilidad**: Los autores y contribuidores no se responsabilizan por pérdidas de datos, daños directos o indirectos, interrupciones de servicio ni cualquier otro perjuicio derivado del uso de este material.
-- **Responsabilidad del estudiante**: Cada estudiante es responsable de sus propias implementaciones, entornos de desarrollo y decisiones técnicas.
-
----
-
-## 📄 Licencia
-
-Este proyecto está bajo la licencia **[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)** (Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International).
-
-**Puedes:** compartir y adaptar el material, incluso crear forks educativos.<br>
-**No puedes:** usar este material con fines comerciales.<br>
-**Debes:** dar crédito apropiado y distribuir las adaptaciones bajo la misma licencia.
-
-Ver el archivo [LICENSE](LICENSE) para el texto completo.
-
----
-
-## 🏆 Agradecimientos
-
-- [React Native](https://reactnative.dev/) — Por el framework mobile multiplataforma
-- [Expo](https://expo.dev/) — Por simplificar el desarrollo con React Native
-- [React Navigation](https://reactnavigation.org/) — Por la navegación más completa del ecosistema
-- [Software Mansion](https://swmansion.com/) — Creadores de Reanimated y Gesture Handler
-- Comunidad React Native — Por los recursos y ejemplos
-- Todos los contribuidores
-
----
-
-## 📚 Documentación Adicional
-
-- [🤖 Instrucciones de Copilot](.github/copilot-instructions.md)
-- [📜 Código de Conducta](CODE_OF_CONDUCT.md)
-- [🔒 Política de Seguridad](SECURITY.md)
-
----
-
-<p align="center">
-  <strong>🎓 Bootcamp React Native - Zero to Hero</strong><br>
-  <em>De desarrollador React a desarrollador mobile en 4.5 meses</em>
-</p>
-
-<p align="center">
-  <a href="bootcamp/week-01-core_components_y_flexbox">Comenzar Semana 1</a> •
-  <a href="https://github.com/ergrato-dev/bc-reactnative/issues">Reportar Issue</a>
-</p>
-
-<p align="center">
-  Hecho con ❤️ para la comunidad de desarrolladores
-</p>
+La rama `week-09` conserva el trabajo consolidado de las semanas 1 a 9 tras la reorganización de carpetas para evaluación.
